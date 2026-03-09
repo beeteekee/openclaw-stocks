@@ -10,12 +10,20 @@ from datetime import datetime, timedelta
 from technical_analysis import calculate_technical_score
 import json
 import os
+from dotenv import load_dotenv
+
+# 加载.env文件中的环境变量
+load_dotenv()
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)
 
-# 从MEMORY.md中获取的token
-TUSHARE_TOKEN = "e2e547ffbac099527efcaaa0072f0a3adea8eb8fd9efba3b65da7518"
+# 从环境变量读取配置
+TUSHARE_TOKEN = os.getenv('TUSHARE_TOKEN')
+STATS_FILE = os.getenv('STATS_FILE', '/Users/likan/.openclaw/workspace/query_stats.json')
+FEISHU_APP_ID = os.getenv('FEISHU_APP_ID', '')
+FEISHU_APP_SECRET = os.getenv('FEISHU_APP_SECRET', '')
+FEISHU_REGION = os.getenv('FEISHU_REGION', 'cn')
 
 # 行业成长系数表
 INDUSTRY_GROWTH = {
@@ -37,9 +45,6 @@ INDUSTRY_GROWTH = {
     # 无成长 (0.1)
     '综合类': 0.1, '建筑装饰': 0.1, '商业贸易': 0.1, '纺织服装': 0.1, '机械基件': 0.1
 }
-
-# 统计数据文件
-STATS_FILE = '/Users/likan/.openclaw/workspace/query_stats.json'
 
 def load_query_stats():
     """从文件加载统计数据"""
