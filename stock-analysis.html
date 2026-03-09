@@ -171,53 +171,65 @@
 
         /* 统一股票卡片样式 - 用于今日精选和查询统计 */
         .stock-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 12px;
-            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            min-height: 90px;
+            min-height: 100px;
             display: flex;
             flex-direction: column;
+            backdrop-filter: blur(10px);
         }
 
         .stock-card:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.12);
             border-color: #4CAF50;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(76, 175, 80, 0.3);
         }
 
         .stock-card.gold-theme:hover {
-            border-color: #ffd700;
-            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+            background: rgba(255, 215, 0, 0.15);
+            border-color: #FFD700;
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
         }
 
         .stock-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .stock-rank {
-            font-size: 18px;
+            font-size: 24px;
             color: #4CAF50;
+            text-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
         }
 
-        .stock-name {
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
+        .stock-info-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .stock-code {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 12px;
-            margin-bottom: 8px;
+        .stock-info-left .stock-name {
+            font-size: 16px;
+            font-weight: 700;
             letter-spacing: 0.5px;
+        }
+
+        .stock-info-left .stock-code {
+            font-size: 13px;
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            border-left: none;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .stock-stats {
@@ -226,7 +238,34 @@
             gap: 8px;
             font-size: 11px;
             align-items: center;
-            flex: 1;
+        }
+
+        .stock-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 12px;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .stock-card-header .stock-stats {
+            flex: 1 1 auto;
+        }
+
+        .stock-stat {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .stock-stat.highlight {
+            background: rgba(76, 175, 80, 0.2);
+            color: #ffffff;
+            font-weight: 600;
         }
 
         .stock-stat {
@@ -331,25 +370,28 @@
         }
 
         .result-item {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            padding: 18px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .result-item:hover {
+            background: rgba(102, 126, 234, 0.1);
             border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
         }
 
         .result-item .stock-name {
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 17px;
+            font-weight: 700;
             color: #333;
-            margin-bottom: 5px;
+            margin-bottom: 0;
+            letter-spacing: 0.5px;
+        }
         }
 
         .result-item .stock-code {
@@ -1378,8 +1420,11 @@
 
             results.forEach(stock => {
                 html += `<div class="result-item" onclick="selectStock('${stock.code}')">`;
-                html += `<div class="stock-name">${stock.name}</div>`;
-                html += `<div class="stock-code">${stock.code} (${stock.industry})</div>`;
+                html += `<div class="stock-info-left">`;
+                html += `<span class="stock-name">${stock.name}</span>`;
+                html += `<span class="stock-code">${stock.code}</span>`;
+                html += `</div>`;
+                html += `<div class="stock-stats">行业：${stock.industry}</div>`;
                 html += '</div>';
             });
 
@@ -1474,9 +1519,18 @@
                             item.innerHTML = `
                                 <div class="stock-card-header">
                                     <span class="stock-rank">${rankEmoji}</span>
-                                    <span class="stock-name">${stock.name}</span>
+                                    <div class="stock-info-left">
+                                        <span class="stock-name">${stock.name}</span>
+                                        <span class="stock-code">${stock.code}</span>
+                                    </div>
+                                    <div class="stock-stats">
+                                        <span class="stock-stat query-count">🔥 ${stock.count} 次查询</span>
+                                    </div>
                                 </div>
-                                <div class="stock-code">${stock.code}</div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
+                                    <span class="stock-stat">价格: ${stock.price.toFixed(2)}元</span>
+                                    <span class="stock-stat ${isUp ? 'up' : ''} ${isDown ? 'down' : ''}">${stock.pct_chg > 0 ? '+' : ''}${stock.pct_chg.toFixed(2)}%</span>
+                                </div>
                                 <div class="stock-stats">
                                     <span class="stock-stat query-count">🔥 ${stock.count} 次查询</span>
                                 </div>
@@ -1551,10 +1605,15 @@
                     <div class="stock-card gold-theme" onclick="quickSelect('${stock.code}')">
                         <div class="stock-card-header">
                             <span class="stock-rank">${rankEmoji}</span>
-                            <span class="stock-name">${stock.name}</span>
+                            <div class="stock-info-left">
+                                <span class="stock-name">${stock.name}</span>
+                                <span class="stock-code">${stock.code}</span>
+                            </div>
+                            <div class="stock-stats">
+                                <span class="stock-stat query-count">🔥 ${stock.count} 次查询</span>
+                            </div>
                         </div>
-                        <div class="stock-code">${stock.code}</div>
-                        <div class="stock-stats">
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
                             <span class="stock-stat">价格: ${stock.price.toFixed(2)}元</span>
                             <span class="stock-stat ${isUp ? 'up' : ''} ${isDown ? 'down' : ''}">${stock.pct_chg > 0 ? '+' : ''}${stock.pct_chg.toFixed(2)}%</span>
                             <span class="stock-stat">市值: ${totalMv}亿</span>
