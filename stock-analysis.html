@@ -896,32 +896,37 @@
 
             <!-- 今日精选和查询统计融合区域 -->
             <div class="unified-section">
-                <!-- 桌面端标题行 -->
+                <!-- 桌面端：今日精选标题 -->
                 <div class="unified-header desktop-only">
                     <div class="unified-title">🏆 今日精选</div>
-                    <div class="unified-subtitle">📊 查询统计 <span class="stats-count">总查询: <span id="totalCount">0</span> 次</span></div>
                 </div>
 
                 <!-- 移动端：今日精选标题 -->
                 <div class="unified-title mobile-only">🏆 今日精选</div>
 
-                <div class="unified-content">
-                    <!-- 今日精选股票列表 -->
-                    <div class="top3-wrapper">
-                        <div id="top3Content" class="top3-content">
-                            <div class="loading-state">📊 正在加载今日精选数据...</div>
-                        </div>
+                <!-- 今日精选股票列表 -->
+                <div class="top3-wrapper">
+                    <div id="top3Content" class="top3-content">
+                        <div class="loading-state">📊 正在加载今日精选数据...</div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- 查询统计列表 -->
-                    <div class="stats-wrapper">
-                        <!-- 移动端：查询统计标题（放在stats-wrapper内部，移动端显示） -->
-                        <div class="unified-subtitle mobile-only" style="margin-bottom: 12px;">
-                            📊 查询统计 <span class="stats-count">总查询: <span id="totalCountMobile">0</span> 次</span>
-                        </div>
-                        <div class="stats-content" id="topStocks">
-                            <div class="loading-state">加载中...</div>
-                        </div>
+            <!-- 查询统计区域 -->
+            <div class="stats-section">
+                <!-- 桌面端：查询统计标题 -->
+                <div class="stats-header desktop-only">
+                    <div class="stats-title">📊 查询统计</div>
+                    <div class="stats-count">总查询: <span id="totalCount">0</span> 次</div>
+                </div>
+
+                <!-- 移动端：查询统计标题 -->
+                <div class="stats-title mobile-only">📊 查询统计</div>
+
+                <!-- 查询统计内容 -->
+                <div class="stats-content-wrapper">
+                    <div class="stats-content" id="statsContent">
+                        <div class="loading-state">加载中...</div>
                     </div>
                 </div>
             </div>
@@ -929,7 +934,7 @@
     </div>
 
     <style>
-        /* 统一区域样式（今日精选+查询统计） */
+        /* 统一区域样式（今日精选） */
         .unified-section {
             background: linear-gradient(135deg, rgba(30, 30, 40, 0.95) 0%, rgba(40, 40, 50, 0.95) 100%);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -937,6 +942,42 @@
             margin-top: 30px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        /* 查询统计区域样式（独立） */
+        .stats-section {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(52, 168, 83, 0.08) 100%);
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(76, 175, 80, 0.15);
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-title {
+            color: #4CAF50;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            letter-spacing: 0.5px;
+        }
+
+        .stats-count {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .stats-content-wrapper {
+            margin-top: 10px;
         }
 
         .unified-header {
@@ -1097,7 +1138,7 @@
     </style>
 
     <script>
-        const API_BASE_URL = '';
+        const API_BASE_URL = 'http://127.0.0.1:5000';
 
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
@@ -1503,10 +1544,10 @@
                     }
 
                     // 更新热门股票列表
-                    const topStocksDiv = document.getElementById('topStocks');
+                    const statsContentDiv = document.getElementById('statsContent');
 
                     if (data.top_stocks && data.top_stocks.length > 0) {
-                        topStocksDiv.innerHTML = '';
+                        statsContentDiv.innerHTML = '';
 
                         data.top_stocks.forEach((stock, index) => {
                             const item = document.createElement('div');
@@ -1527,19 +1568,12 @@
                                         <span class="stock-stat query-count">🔥 ${stock.count} 次查询</span>
                                     </div>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
-                                    <span class="stock-stat">价格: ${stock.price.toFixed(2)}元</span>
-                                    <span class="stock-stat ${isUp ? 'up' : ''} ${isDown ? 'down' : ''}">${stock.pct_chg > 0 ? '+' : ''}${stock.pct_chg.toFixed(2)}%</span>
-                                </div>
-                                <div class="stock-stats">
-                                    <span class="stock-stat query-count">🔥 ${stock.count} 次查询</span>
-                                </div>
                             `;
 
-                            topStocksDiv.appendChild(item);
+                            statsContentDiv.appendChild(item);
                         });
                     } else {
-                        topStocksDiv.innerHTML = '<div class="error-state">暂无查询记录</div>';
+                        statsContentDiv.innerHTML = '<div class="error-state">暂无查询记录</div>';
                     }
                 } else {
                     console.error('获取统计数据失败:', data.error);
@@ -1610,14 +1644,13 @@
                                 <span class="stock-code">${stock.code}</span>
                             </div>
                             <div class="stock-stats">
-                                <span class="stock-stat query-count">🔥 ${stock.count} 次查询</span>
+                                <span class="stock-stat highlight">${stock.overall_score.toFixed(1)}分</span>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
                             <span class="stock-stat">价格: ${stock.price.toFixed(2)}元</span>
                             <span class="stock-stat ${isUp ? 'up' : ''} ${isDown ? 'down' : ''}">${stock.pct_chg > 0 ? '+' : ''}${stock.pct_chg.toFixed(2)}%</span>
                             <span class="stock-stat">市值: ${totalMv}亿</span>
-                            <span class="stock-stat highlight">得分: ${stock.overall_score.toFixed(1)}</span>
                         </div>
                     </div>
                 `;
