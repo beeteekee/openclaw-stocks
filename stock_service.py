@@ -1939,6 +1939,381 @@ def advanced_emotion_analysis():
         return jsonify({'error': str(e)}), 500
 
 
+def format_analysis_report(data):
+    """
+    将分析数据格式化为报告样式
+
+    Args:
+        data: analyze_stock返回的完整数据
+
+    Returns:
+        str: 格式化的报告文本
+    """
+    # 提取关键数据
+    name = data['name']
+    code = data['code']
+    industry = data['industry']
+    total_mv = data['market_cap']['total_mv']
+
+    long_term_score = data['scores']['long_term']
+    medium_term_score = data['scores']['medium_term']
+    short_term_score = data['scores']['short_term']
+    overall_score = data['scores']['overall']
+
+    win_rate = data['win_rate']
+    position_advice = data['position_advice']
+    overall_rating = data['overall_rating']
+
+    # 技术面数据
+    ma250_score = data['technical']['ma250_score']
+    chanlun_score = data['technical']['chanlun_score']
+    chanlun_type = data['technical']['chanlun_type']
+    chanlun_desc = data['technical']['chanlun_desc']
+    price_above_ma250 = chanlun_score > 0 and ma250_score > 60
+
+    # 涨停数据
+    limit_up_count = data['technical']['limit_up_count']
+
+    # 财务数据
+    financial_score = data['financial']['score']
+    financial_data = data['financial']['data']
+
+    # 行业成长系数
+    growth_coeff = data['industry_growth']['coefficient']
+
+    # 情绪周期
+    current_emotion = data['emotion']['current']
+    emotion_score = data['emotion']['score']
+
+    # 生成报告
+    report_lines = []
+
+    # 标题
+    report_lines.append(f"## {name}（{code}）分析报告")
+    report_lines.append(f"**行业**：{industry} | **总市值**：{total_mv:.0f}亿元")
+    report_lines.append(f"**综合得分**：{overall_score:.1f}分（{overall_rating}）| **赢面**：{win_rate:.1f}%")
+    report_lines.append("")
+
+    # === 长期投资（3年以上）===
+    report_lines.append("### ✅ 长期投资（3年以上）")
+
+    # 长期建议和理由
+    if long_term_score >= 80:
+        report_lines.append("**建议**：积极关注")
+        report_lines.append("**理由**：")
+        if growth_coeff >= 1.0:
+            report_lines.append(f"赛道天花板高：{industry}是国家级战略或高成长行业")
+        if financial_score >= 70:
+            report_lines.append(f"财务质量强：ROE、营收、利润增长优秀")
+        if growth_coeff >= 0.7:
+            report_lines.append("行业前景好：中高成长赛道，长期空间大")
+    elif long_term_score >= 60:
+        report_lines.append("**建议**：适度关注")
+        report_lines.append("**理由**：")
+        report_lines.append(f"行业中等成长：{industry}有一定成长空间")
+        if financial_score >= 60:
+            report_lines.append("财务质量尚可：基本面支撑较强")
+    else:
+        report_lines.append("**建议**：谨慎观望")
+        report_lines.append("**理由**：")
+        report_lines.append(f"赛道天花板低：{industry}属于低成长或无成长行业")
+        if financial_score < 50:
+            report_lines.append("财务质量一般：ROE、营收、利润增长乏力")
+
+    report_lines.append("")
+
+    # === 中期投资（6-12个月）===
+    report_lines.append("### ⚠️ 中期投资（6-12个月）")
+
+    # 中期建议和理由
+    if medium_term_score >= 70:
+        report_lines.append("**建议**：积极关注")
+        report_lines.append("**理由**：")
+        if limit_up_count >= 2:
+            report_lines.append(f"资金流入：近10日有{limit_up_count}次涨停，资金关注度强")
+        if limit_up_count >= 1:
+            report_lines.append(f"有涨停信号：近10日有涨停，资金开始关注")
+        if financial_score >= 70:
+            report_lines.append("财务质量优秀：基本面支撑强")
+        if tech_score := data['technical']['score'] >= 60:
+            report_lines.append("技术面企稳：股价站上250日均线或接近")
+    elif medium_term_score >= 60:
+        report_lines.append("**建议**：适度关注")
+        report_lines.append("**理由**：")
+        if financial_score >= 60:
+            report_lines.append("财务质量尚可：基本面有一定支撑")
+        if growth_coeff >= 0.7:
+            report_lines.append("行业中等成长：有一定成长空间")
+    else:
+        report_lines.append("**建议**：谨慎观望")
+        report_lines.append("**理由**：")
+        if limit_up_count == 0:
+            report_lines.append("无资金流入：近10日无涨停，资金关注度低")
+        if not price_above_ma250:
+            report_lines.append("技术面空头：股价低于250日均线")
+        if financial_score < 50:
+            report_lines.append("财务质量一般：基本面支撑不足")
+
+    report_lines.append("")
+
+    # === 短期交易（1-3个月）===
+    report_lines.append("### ❌ 短期交易（1-3个月）")
+
+    # 短期建议和理由
+    if short_term_score >= 70:
+        report_lines.append("**建议**：积极关注")
+        report_lines.append("**理由**：")
+        if chanlun_type >= 1:
+            report_lines.append(f"有买点信号：{chanlun_desc}")
+        if price_above_ma250:
+            report_lines.append("技术面多头：股价高于250日均线")
+        if total_mv < 200:
+            report_lines.append("市值适中：短期操作相对灵活")
+    elif short_term_score >= 50:
+        report_lines.append("**建议**：谨慎观望")
+        report_lines.append("**理由**：")
+        if chanlun_type == 0:
+            report_lines.append("无买点信号：无缠论买点确认")
+        if ma250_score < 60:
+            report_lines.append("技术面中性：股价接近250日均线")
+        if total_mv >= 500:
+            report_lines.append(f"市值偏大：{total_mv:.0f}亿元，短期操作难度大")
+    else:
+        report_lines.append("**建议**：回避")
+        report_lines.append("**理由**：")
+        if ma250_score < 40:
+            report_lines.append("技术面空头：股价远低于250日均线")
+        if chanlun_type == 0:
+            report_lines.append("无买点信号：无缠论买点确认")
+        if limit_up_count == 0:
+            report_lines.append("无资金关注：近10日无涨停")
+        if total_mv >= 500:
+            report_lines.append(f"市值过大：{total_mv:.0f}亿元，短期操作极难")
+
+    report_lines.append("")
+
+    # === 关键观察点 ===
+    report_lines.append("### 📊 关键观察点")
+
+    # 积极信号（等待确认）
+    report_lines.append("#### 🟢 积极信号（等待确认）")
+    positive_signals = []
+
+    if not price_above_ma250:
+        positive_signals.append("股价站上250日均线")
+
+    if limit_up_count == 0:
+        positive_signals.append("出现涨停（资金回流）")
+
+    if chanlun_type == 0 and short_term_score < 50:
+        positive_signals.append("底部形态确立")
+        positive_signals.append("缠论一类买点确认")
+
+    if positive_signals:
+        for signal in positive_signals:
+            report_lines.append(f"- {signal}")
+    else:
+        report_lines.append("- 暂无积极信号")
+
+    # 负面信号（当前状态）
+    report_lines.append("")
+    report_lines.append("#### 🔴 负面信号（当前状态）")
+    negative_signals = []
+
+    if not price_above_ma250:
+        if ma250_score < 40:
+            negative_signals.append("深度空头趋势（股价远低于250日均线）")
+        else:
+            negative_signals.append("技术面空头（股价低于250日均线）")
+
+    if limit_up_count == 0:
+        negative_signals.append("无涨停资金流入")
+
+    if total_mv >= 500:
+        negative_signals.append(f"市值过大（{total_mv:.0f}亿元）")
+
+    if chanlun_type == 0:
+        negative_signals.append("无缠论买点确认")
+
+    if negative_signals:
+        for signal in negative_signals:
+            report_lines.append(f"- {signal}")
+    else:
+        report_lines.append("- 暂无负面信号")
+
+    report_lines.append("")
+
+    # === 风险提示 ===
+    report_lines.append("### ⚠️ 风险提示")
+
+    risk_warnings = []
+
+    if ma250_score < 40:
+        risk_warnings.append("技术面深度空头，短期风险大")
+
+    if total_mv >= 500:
+        risk_warnings.append(f"市值过大（{total_mv:.0f}亿元），弹性有限")
+
+    if short_term_score < 30:
+        risk_warnings.append("无技术买点，短期操作风险极高")
+
+    if limit_up_count == 0 and growth_coeff < 0.7:
+        risk_warnings.append("无资金关注，行业成长性一般")
+
+    if financial_score < 40:
+        risk_warnings.append("财务质量较差，基本面支撑不足")
+
+    # 行业特定风险
+    if growth_coeff >= 0.7 and financial_score < 60:
+        risk_warnings.append("行业高成长但财务质量一般，需关注业绩兑现")
+
+    if risk_warnings:
+        for warning in risk_warnings:
+            report_lines.append(f"- {warning}")
+    else:
+        report_lines.append("- 当前风险可控")
+
+    report_lines.append("")
+
+    # === 核心结论 ===
+    report_lines.append("### 🎯 核心结论")
+
+    # 养家心法三周期视角
+    report_lines.append("**养家心法三周期视角：**")
+    report_lines.append("")
+
+    # 长期
+    long_stars = "⭐" * int(long_term_score / 20)
+    report_lines.append(f"**长期（赛道）**：{long_stars} ({int(long_term_score)}分)")
+    if growth_coeff >= 1.0:
+        report_lines.append(f"- {industry}是国家级战略或高成长赛道")
+    elif growth_coeff >= 0.7:
+        report_lines.append(f"- {industry}是中等成长赛道")
+    else:
+        report_lines.append(f"- {industry}成长性一般")
+    if financial_score >= 70:
+        report_lines.append("- 财务质量优秀，长期价值凸显")
+    elif financial_score >= 50:
+        report_lines.append("- 财务质量尚可，有一定支撑")
+    else:
+        report_lines.append("- 财务质量一般，需关注业绩")
+    report_lines.append("")
+
+    # 中期
+    mid_stars = "⭐" * int(medium_term_score / 20)
+    report_lines.append(f"**中期（资金）**：{mid_stars} ({int(medium_term_score)}分)")
+    if limit_up_count >= 2:
+        report_lines.append(f"- 近10日有{limit_up_count}次涨停，资金关注度高")
+    elif limit_up_count == 1:
+        report_lines.append("- 近10日有1次涨停，资金开始关注")
+    else:
+        report_lines.append("- 近10日无涨停，无资金流入迹象")
+    if price_above_ma250:
+        report_lines.append("- 技术面多头，趋势向上")
+    else:
+        report_lines.append("- 技术面空头，趋势向下")
+    report_lines.append("")
+
+    # 短期
+    short_stars = "⭐" * int(short_term_score / 20)
+    report_lines.append(f"**短期（技术）**：{short_stars} ({int(short_term_score)}分)")
+    if chanlun_type >= 1:
+        report_lines.append(f"- {chanlun_desc}")
+    else:
+        report_lines.append("- 无缠论买点确认")
+    if price_above_ma250:
+        report_lines.append("- 股价高于250日均线")
+    else:
+        report_lines.append("- 股价低于250日均线")
+    if total_mv >= 500:
+        report_lines.append(f"- 市值过大（{total_mv:.0f}亿元），短期操作困难")
+    else:
+        report_lines.append("- 市值适中，短期操作相对灵活")
+    report_lines.append("")
+
+    # 一句话总结
+    report_lines.append("**一句话总结：**")
+    summary_parts = []
+
+    # 长期描述
+    if long_term_score >= 80:
+        summary_parts.append(f"长期赛道优秀（{industry}）")
+    elif long_term_score >= 60:
+        summary_parts.append(f"长期赛道尚可（{industry}）")
+    else:
+        summary_parts.append(f"长期赛道一般（{industry}）")
+
+    # 中期描述
+    if medium_term_score >= 70:
+        summary_parts.append("中期资金关注度高")
+    elif medium_term_score >= 50:
+        summary_parts.append("中期资金关注度一般")
+    else:
+        summary_parts.append("中期无资金关注")
+
+    # 短期描述
+    if short_term_score >= 70:
+        summary_parts.append("短期有买点")
+    elif short_term_score >= 50:
+        summary_parts.append("短期观望")
+    else:
+        summary_parts.append("短期回避")
+
+    # 综合建议
+    if overall_score >= 75:
+        summary_parts.append(f"综合评级优秀（{overall_score:.1f}分），建议积极关注")
+    elif overall_score >= 60:
+        summary_parts.append(f"综合评级良好（{overall_score:.1f}分），建议适度关注")
+    else:
+        summary_parts.append(f"综合评级一般（{overall_score:.1f}分），建议谨慎观望")
+
+    report_lines.append("，".join(summary_parts) + "。")
+    report_lines.append("")
+
+    # 仓位建议
+    report_lines.append(f"**仓位建议**：{position_advice}（赢面{win_rate:.1f}%）")
+
+    return "\n".join(report_lines)
+
+
+@app.route('/api/report', methods=['GET'])
+def get_analysis_report():
+    """
+    获取格式化的分析报告
+
+    Query参数:
+        code: 股票代码（如：600000.SH）
+
+    Returns:
+        dict: 包含格式化报告和原始数据
+    """
+    stock_code = request.args.get('code')
+
+    if not stock_code:
+        return jsonify({'error': '请提供股票代码'}), 400
+
+    try:
+        # 调用analyze_stock获取完整数据
+        stock_result = analyze_stock_internal(stock_code)
+
+        if isinstance(stock_result, tuple) and stock_result[1] != 200:
+            # 如果是错误响应
+            return stock_result
+
+        # 格式化报告
+        formatted_report = format_analysis_report(stock_result[0])
+
+        return jsonify({
+            'code': stock_code,
+            'name': stock_result[0]['name'],
+            'report': formatted_report,
+            'data': stock_result[0]  # 包含原始数据供前端使用
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/health', methods=['GET'])
 def health():
     """健康检查"""
