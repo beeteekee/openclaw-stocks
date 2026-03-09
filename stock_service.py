@@ -26,6 +26,9 @@ FEISHU_APP_ID = os.getenv('FEISHU_APP_ID', '')
 FEISHU_APP_SECRET = os.getenv('FEISHU_APP_SECRET', '')
 FEISHU_REGION = os.getenv('FEISHU_REGION', 'cn')
 
+# Flask 服务端口（默认5000）
+FLASK_PORT = int(os.getenv('FLASK_PORT', '5000'))
+
 # 行业成长系数表
 INDUSTRY_GROWTH = {
     # 高成长 (1.0)
@@ -2333,4 +2336,4 @@ if __name__ == '__main__':
     print("  - GET /api/analyze?code=股票代码")
     print("  - GET /api/health")
     print("="*60)
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='127.0.0.1', port=FLASK_PORT, debug=True)
