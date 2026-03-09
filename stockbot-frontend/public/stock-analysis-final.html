@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票分析</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            min-width: 320px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            padding: 20px 15px;
+            overflow: hidden;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #007bff;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+        }
+
+        .status-dot.disconnected {
+            background: #dc3545;
+        }
+
+        .status-dot.busy {
+            background: #ffc107;
+        }
+
+        .status-dot.error {
+            background: #dc3545;
+        }
+
+        .result-section {
+            min-height: 200px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .debug-section {
+            background: #fff3cd;
+            border-left: 3px solid #ffc107;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* 统计信息横向滚动条 */
+        .stats-ticker {
+            background: #2c3e50;
+            color: white;
+            padding: 8px 0;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ticker-content {
+            display: flex;
+            animation: scroll-left 20s linear infinite;
+            white-space: nowrap;
+        }
+
+        .ticker-item {
+            flex: 0 0 auto;
+            padding: 0 30px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .ticker-label {
+            color: #3498db;
+            margin-right: 5px;
+        }
+
+        .ticker-value {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        .stats-ticker:hover .ticker-content {
+            animation-play-state: paused;
+        }
+
+        .examples {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .example {
+            background: #e9ecef;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .example:hover {
+            background: #007bff;
+            color: white;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ddd;
+            border-top-color: #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px 10px;
+                border-radius: 8px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .result-section {
+                font-size: 13px;
+                padding: 12px;
+                word-break: break-all;
+            }
+
+            .status-bar {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            .examples {
+                gap: 6px;
+            }
+
+            .example {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+
+            .debug-section {
+                font-size: 10px;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-bar">
+            <span class="status-dot connected" id="statusDot"></span>
+            <span id="statusText">API 已就绪</span>
+        </div>
+
+        <div class="input-section">
+            <label for="stockInput">输入股票名称或代码</label>
+            <div class="input-group">
+                <input type="text" id="stockInput" placeholder="例如：比亚迪 或 002594" />
+                <button id="analyzeBtn" onclick="analyze()">分析</button>
+            </div>
+            <div class="examples">
+                <span class="example" onclick="quickSelect('比亚迪')">比亚迪</span>
+                <span class="example" onclick="quickSelect('贵州茅台')">贵州茅台</span>
+                <span class="example" onclick="quickSelect('宁德时代')">宁德时代</span>
+                <span class="example" onclick="quickSelect('002594')">002594</span>
+            </div>
+        </div>
+
+        <div id="errorContainer"></div>
+        <div class="result-section" id="result">
+            <p style="color: #999; text-align: center;">请在上方输入股票进行分析</p>
+        </div>
+
+        <!-- 统计信息横向滚动条 -->
+        <div class="stats-ticker">
+            <div class="ticker-content" id="tickerContent">
+                <div class="ticker-item">
+                    <span class="ticker-label">日期:</span>
+                    <span class="ticker-value" id="statsDate">加载中...</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-label">查询次数:</span>
+                    <span class="ticker-value" id="statsQueryCount">0</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-label">股票数量:</span>
+                    <span class="ticker-value" id="statsStockCount">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const stockInput = document.getElementById('stockInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const result = document.getElementById('result');
+        const errorContainer = document.getElementById('errorContainer');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const debugInfo = document.getElementById('debugInfo');
+        const apiUrl = document.getElementById('apiUrl');
+        const lastRequest = document.getElementById('lastRequest');
+        const lastResponse = document.getElementById('lastResponse');
+        const lastStatus = document.getElementById('lastStatus');
+
+        // 统计信息元素
+        const statsDate = document.getElementById('statsDate');
+        const statsQueryCount = document.getElementById('statsQueryCount');
+        const statsStockCount = document.getElementById('statsStockCount');
+
+        // API 配置
+        const API_URL = 'http://localhost:18789/v1/chat/completions';
+        const API_TOKEN = '2047e3763a3a15acfb3ef96e3c40eac23a59500c9c3f436b';
+        const AGENT_ID = 'stock-analysis';
+
+        // 请求超时时间（30秒）
+        const REQUEST_TIMEOUT = 30000;
+
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats/previous');
+                if (response.ok) {
+                    const stats = await response.json();
+                    statsDate.textContent = stats.date;
+                    statsQueryCount.textContent = stats.queryCount;
+                    statsStockCount.textContent = stats.stockCount;
+                } else {
+                    console.error('获取统计数据失败');
+                }
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+
+        // 记录查询
+        async function recordQuery(stockCode) {
+            try {
+                await fetch('/api/stats/record', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ stockCode: stockCode })
+                });
+            } catch (error) {
+                console.error('记录统计失败:', error);
+            }
+        }
+
+        // 规范化股票代码格式
+        function normalizeStockCode(code) {
+            // 去除前后空格并转大写
+            code = code.trim().toUpperCase();
+
+            // 如果已经包含后缀，直接返回
+            if (code.endsWith('.SZ') || code.endsWith('.SH')) {
+                return code;
+            }
+
+            // 如果是6位纯数字，自动补充后缀
+            if (/^\d{6}$/.test(code)) {
+                const firstDigit = code.charAt(0);
+                if (firstDigit === '0' || firstDigit === '2' || firstDigit === '3') {
+                    return code + '.SZ';  // 深圳股票
+                } else if (firstDigit === '6') {
+                    return code + '.SH';  // 上海股票
+                }
+            }
+
+            // 不是6位数字，可能是股票名称或其他格式，直接返回原值
+            return code;
+        }
+
+        async function analyze() {
+            const stock = stockInput.value.trim();
+
+            if (!stock) {
+                showError('请输入股票名称或代码');
+                return;
+            }
+
+            // 规范化股票代码
+            const normalizedStock = normalizeStockCode(stock);
+            if (normalizedStock !== stock) {
+                // 如果代码被规范化，更新输入框显示
+                stockInput.value = normalizedStock;
+            }
+
+            // 记录查询统计
+            recordQuery(normalizedStock);
+
+            setLoading(true);
+            hideError();
+            debugInfo.style.display = 'block';
+
+            const requestPayload = {
+                model: 'openclaw:' + AGENT_ID,
+                messages: [
+                    {
+                        role: 'user',
+                        content: '分析股票：' + normalizedStock
+                    }
+                ],
+                stream: false
+            };
+
+            // 更新调试信息
+            apiUrl.textContent = API_URL;
+            lastRequest.textContent = JSON.stringify(requestPayload).substring(0, 100) + '...';
+
+            try {
+                // 使用 AbortController 实现超时
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    controller.abort();
+                }, REQUEST_TIMEOUT);
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + API_TOKEN,
+                        'x-openclaw-agent-id': AGENT_ID
+                    },
+                    body: JSON.stringify(requestPayload),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error('HTTP 错误: ' + response.status);
+                }
+
+                const data = await response.json();
+
+                // 更新调试信息
+                lastStatus.textContent = response.status;
+                lastResponse.textContent = JSON.stringify(data, null, 2).substring(0, 200) + '...';
+
+                if (data.choices && data.choices[0]) {
+                    const content = data.choices[0].message.content;
+                    result.textContent = content;
+                    updateStatus('connected', '分析完成');
+                } else if (data.error) {
+                    showError('服务器错误: ' + data.error.message);
+                    updateStatus('error', '请求失败');
+                } else {
+                    result.textContent = 'API 返回格式异常\n\n' + JSON.stringify(data, null, 2);
+                    updateStatus('connected', '返回异常');
+                }
+            } catch (error) {
+                console.error('请求失败:', error);
+
+                if (error.name === 'AbortError') {
+                    showError('请求超时（30秒），请重试');
+                    updateStatus('busy', '请求超时');
+                } else {
+                    showError('请求失败：' + error.message);
+                    updateStatus('error', '网络错误');
+                }
+
+                lastStatus.textContent = error.name || '未知错误';
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function updateStatus(status, text) {
+            statusDot.className = 'status-dot ' + status;
+            statusText.textContent = text;
+        }
+
+        function setLoading(loading) {
+            analyzeBtn.disabled = loading;
+            analyzeBtn.textContent = loading ? '分析中...' : '分析';
+        }
+
+        function showError(message) {
+            errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+
+        function hideError() {
+            errorContainer.innerHTML = '';
+        }
+
+        function quickSelect(stock) {
+            stockInput.value = stock;
+            stockInput.focus();
+        }
+
+        // 回车键快捷分析
+        stockInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyze();
+            }
+        });
+
+        // 页面加载时检查连接
+        window.onload = function() {
+            console.log('页面已加载');
+            // 加载统计数据
+            loadStats();
+            // 简单的连接测试
+            fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + API_TOKEN,
+                    'x-openclaw-agent-id': AGENT_ID
+                },
+                body: JSON.stringify({
+                    model: 'openclaw:' + AGENT_ID,
+                    messages: [{ role: 'user', content: '你好' }],
+                    stream: false
+                }),
+                signal: AbortSignal.timeout(5000)
+            }).then(response => {
+                if (response.ok) {
+                    updateStatus('connected', 'API 正常');
+                } else {
+                    updateStatus('disconnected', 'API 不可用');
+                }
+            }).catch(error => {
+                console.error('连接测试失败:', error);
+                updateStatus('disconnected', '网络错误');
+            });
+        };
+    </script>
+</body>
+</html>

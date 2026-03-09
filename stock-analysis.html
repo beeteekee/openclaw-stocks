@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📈 股票分析 - OpenClaw</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            min-width: 320px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 20px 15px;
+            overflow: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .emoji-icon {
+            font-size: 48px;
+            display: block;
+            margin: 0 auto 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .status-bar {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.connected {
+            background: #4CAF50;
+            box-shadow: 0 0 10px #4CAF50;
+        }
+
+        .status-dot.disconnected {
+            background: #f44336;
+        }
+
+        .status-dot.connecting {
+            background: #ff9800;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 100px;
+        }
+
+        /* 统一股票卡片样式 - 用于今日精选和查询统计 */
+        .stock-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stock-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #4CAF50;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+        }
+
+        .stock-card.gold-theme:hover {
+            border-color: #ffd700;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+
+        .stock-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .stock-rank {
+            font-size: 18px;
+            color: #4CAF50;
+        }
+
+        .stock-name {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stock-code {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .stock-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 11px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .stock-stat {
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        .stock-stat.up {
+            color: #f44336;
+            text-shadow: 0 1px 2px rgba(244, 67, 54, 0.3);
+        }
+
+        .stock-stat.down {
+            color: #4CAF50;
+            text-shadow: 0 1px 2px rgba(76, 175, 80, 0.3);
+        }
+
+        .stock-stat.highlight {
+            color: #ffd700;
+            text-shadow: 0 1px 2px rgba(255, 215, 0, 0.3);
+        }
+
+        .stock-stat.query-count {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        /* 加载和错误状态 */
+        .loading-state {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            padding: 20px;
+            grid-column: 1 / -1;
+        }
+
+        .error-state {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            padding: 20px;
+            grid-column: 1 / -1;
+        }
+
+        .result-title {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .result-content {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #555;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .multiple-results {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .multiple-results h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .result-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .result-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .result-item .stock-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .result-item .stock-code {
+            font-size: 13px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .multiple-results {
+                padding: 15px;
+            }
+
+            .multiple-results h3 {
+                font-size: 14px;
+            }
+
+            .result-item {
+                padding: 12px;
+            }
+
+            .result-item .stock-name {
+                font-size: 14px;
+            }
+
+            .result-item .stock-code {
+                font-size: 12px;
+            }
+        }
+
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .connection-info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .quick-examples {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .example-tag {
+            background: #f0f0f0;
+            color: #666;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e0e0e0;
+        }
+
+        .example-tag:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tips {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #1565c0;
+        }
+
+        .donation-section {
+            background: linear-gradient(135deg, #b71c1c 0%, #c62828 30%, #d32f2f 70%, #e53935 100%);
+            border-radius: 16px;
+            padding: 25px 20px;
+            margin-top: 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #ffd700;
+        }
+
+        .donation-header {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed rgba(255, 215, 0, 0.5);
+            width: 100%;
+        }
+
+        .donation-greeting {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .donation-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ffd700, #ff0000, #ffd700, #ff0000, #ffd700);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+
+        .donation-section::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ffd700, #ff0000, #ffd700, #ff0000, #ffd700);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        .donation-header {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed rgba(255, 215, 0, 0.5);
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .donation-greeting {
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 3px;
+        }
+
+        .donation-body {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .donation-left, .donation-right {
+            flex: 1;
+            height: 140px;
+            overflow: hidden;
+            position: relative;
+            border-radius: 8px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(2px);
+        }
+
+        .donation-scroll {
+            position: absolute;
+            width: 100%;
+            animation: scrollUp 40s linear infinite;
+        }
+
+        @keyframes scrollUp {
+            0% {
+                transform: translateY(0%);
+            }
+            100% {
+                transform: translateY(-50%);
+            }
+        }
+
+        .donation-scroll-item {
+            padding: 8px 0;
+            font-size: 15px;
+            color: #ffffff;
+            font-weight: 600;
+            line-height: 1.8;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 0.5px;
+        }
+
+        .donation-left .donation-scroll-item {
+            border-bottom: 1px dashed rgba(255, 215, 0, 0.3);
+            padding-bottom: 10px;
+            margin-bottom: 8px;
+        }
+
+        .donation-right .donation-scroll-item {
+            border-bottom: 1px dashed rgba(255, 215, 0, 0.3);
+            padding-bottom: 10px;
+            margin-bottom: 8px;
+        }
+
+        .donation-center {
+            flex: 1;
+            height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .donation-qr-container {
+            width: 130px;
+            height: 130px;
+            background: white;
+            border-radius: 12px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            border: 3px solid #ffd700;
+        }
+
+        .donation-qr-code {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .donation-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.5);
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .donation-text {
+            font-size: 14px;
+            color: #ffffff;
+            line-height: 1.6;
+            text-align: center;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+
+        .donation-heart {
+            font-size: 20px;
+            animation: heartbeat 1.5s infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .score-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .score-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .score-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .score-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .score-value.high {
+            color: #4CAF50;
+        }
+
+        .score-value.medium {
+            color: #ff9800;
+        }
+
+        .score-value.low {
+            color: #f44336;
+        }
+
+        .score-value.up {
+            color: #f44336;
+        }
+
+        .score-value.down {
+            color: #4CAF50;
+        }
+
+        .rating-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .rating-badge.excellent {
+            background: #4CAF50;
+        }
+
+        .rating-badge.good {
+            background: #2196F3;
+        }
+
+        .rating-badge.poor {
+            background: #f44336;
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                align-items: flex-start;
+            }
+
+            .container {
+                padding: 15px 10px;
+                border-radius: 12px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .subtitle {
+                font-size: 12px;
+                margin-bottom: 20px;
+            }
+
+            .emoji-icon {
+                font-size: 36px;
+                margin-bottom: 15px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .result-content {
+                font-size: 13px;
+                word-break: break-all;
+            }
+
+            .result-section {
+                padding: 20px;
+            }
+
+            .status-bar {
+                font-size: 11px;
+                padding: 8px 10px;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .quick-examples {
+                gap: 6px;
+            }
+
+            .example-tag {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+
+            .tips {
+                font-size: 11px;
+                padding: 10px;
+            }
+
+            .connection-info {
+                font-size: 10px;
+            }
+
+            .score-card {
+                padding: 12px;
+            }
+
+            .score-label {
+                font-size: 12px;
+            }
+
+            .score-value {
+                font-size: 14px;
+            }
+
+            .donation-section {
+                padding: 20px 15px;
+            }
+
+            .donation-header {
+                margin-bottom: 10px;
+            }
+
+            .donation-greeting {
+                font-size: 18px;
+                letter-spacing: 2px;
+            }
+
+            .donation-body {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .donation-left, .donation-right {
+                width: 100%;
+                height: 100px;
+            }
+
+            .donation-center {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .donation-scroll-item {
+                font-size: 13px;
+            }
+
+            .donation-center {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>股票诊断分析</h1>
+        <p class="subtitle">基于OpenClaw的AI分析，仅供娱乐</p>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot connecting" id="statusDot"></span>
+                <span id="statusText">正在连接...</span>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <label for="stockInput">输入股票代码（格式：000001.SZ 或 600000.SH）</label>
+            <div class="input-group">
+                <input type="text" id="stockInput" placeholder="例如：002594.SZ" value="002594.SZ" />
+                <button id="analyzeBtn" onclick="analyzeStock()">分析诊断</button>
+            </div>
+            <div class="quick-examples">
+                <span class="example-tag" onclick="quickSelect('002594.SZ')">比亚迪</span>
+                <span class="example-tag" onclick="quickSelect('600519.SH')">贵州茅台</span>
+                <span class="example-tag" onclick="quickSelect('300750.SZ')">宁德时代</span>
+                <span class="example-tag" onclick="quickSelect('688981.SH')">中芯国际</span>
+                <span class="example-tag" onclick="quickSelect('000858.SZ')">五粮液</span>
+            </div>
+        </div>
+
+        <div id="errorContainer" style="display: none;"></div>
+
+        <div class="result-section">
+            <div class="result-title">📊 诊断结果</div>
+            <div id="resultContent">
+                <p style="color: #999; text-align: center;">请在上方输入股票代码进行分析</p>
+            </div>
+
+            <!-- 今日精选和查询统计融合区域 -->
+            <div class="unified-section">
+                <!-- 桌面端标题行 -->
+                <div class="unified-header desktop-only">
+                    <div class="unified-title">🏆 今日精选</div>
+                    <div class="unified-subtitle">📊 查询统计 <span class="stats-count">总查询: <span id="totalCount">0</span> 次</span></div>
+                </div>
+
+                <!-- 移动端：今日精选标题 -->
+                <div class="unified-title mobile-only">🏆 今日精选</div>
+
+                <div class="unified-content">
+                    <!-- 今日精选股票列表 -->
+                    <div class="top3-wrapper">
+                        <div id="top3Content" class="top3-content">
+                            <div class="loading-state">📊 正在加载今日精选数据...</div>
+                        </div>
+                    </div>
+
+                    <!-- 查询统计列表 -->
+                    <div class="stats-wrapper">
+                        <!-- 移动端：查询统计标题（放在stats-wrapper内部，移动端显示） -->
+                        <div class="unified-subtitle mobile-only" style="margin-bottom: 12px;">
+                            📊 查询统计 <span class="stats-count">总查询: <span id="totalCountMobile">0</span> 次</span>
+                        </div>
+                        <div class="stats-content" id="topStocks">
+                            <div class="loading-state">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* 统一区域样式（今日精选+查询统计） */
+        .unified-section {
+            background: linear-gradient(135deg, rgba(30, 30, 40, 0.95) 0%, rgba(40, 40, 50, 0.95) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .unified-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .unified-title {
+            color: #ffd700;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(255, 215, 0, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        .unified-subtitle {
+            color: #4CAF50;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            text-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+            letter-spacing: 0.3px;
+        }
+
+        .unified-subtitle .stats-count {
+            margin-left: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        .unified-subtitle .stats-count span {
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 16px;
+            text-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+        }
+
+        .unified-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            position: relative;
+        }
+
+        /* 中间分隔线 */
+        .unified-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 1px;
+            background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+
+        /* 今日精选包装器（用于Grid布局） */
+        .top3-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 查询统计包装器（用于Grid布局） */
+        .stats-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 今日精选内容容器 */
+        .top3-content {
+            background: rgba(255, 215, 0, 0.03);
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* 查询统计内容容器 */
+        .stats-content {
+            background: rgba(76, 175, 80, 0.03);
+            border: 1px solid rgba(76, 175, 80, 0.15);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* 桌面端显示 */
+        .desktop-only {
+            display: block;
+        }
+
+        /* 移动端显示 */
+        .mobile-only {
+            display: none;
+        }
+
+        /* 桌面端：左侧今日精选，右侧查询统计 */
+        @media (max-width: 768px) {
+            /* 桌面端标题隐藏 */
+            .desktop-only {
+                display: none !important;
+            }
+
+            /* 移动端标题显示 */
+            .mobile-only {
+                display: block !important;
+            }
+
+            /* 调整移动端标题样式 */
+            .mobile-only.unified-title {
+                font-size: 18px;
+                margin-bottom: 12px;
+            }
+
+            .mobile-only.unified-subtitle {
+                font-size: 16px;
+                margin-bottom: 12px;
+                margin-top: 0 !important;
+                padding-top: 0 !important;
+                border-top: none !important;
+            }
+
+            .unified-content {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .unified-content::before {
+                left: 0;
+                right: 0;
+                top: 50%;
+                bottom: auto;
+                width: 100%;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            }
+
+            .top3-content,
+            .stats-content {
+                padding: 12px;
+            }
+
+            .top3-wrapper,
+            .stats-wrapper {
+                width: 100%;
+            }
+        }
+
+
+    </style>
+
+    <script>
+        const API_BASE_URL = '';
+
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const stockInput = document.getElementById('stockInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resultContent = document.getElementById('resultContent');
+        const errorContainer = document.getElementById('errorContainer');
+
+        // 检查服务器健康状态
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/health`);
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    updateStatus('connected', '服务正常');
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('健康检查失败:', error);
+                return false;
+            }
+        }
+
+        function updateStatus(status, text) {
+            statusDot.className = 'status-dot ' + status;
+            statusText.textContent = text;
+        }
+
+        function showError(message) {
+            errorContainer.style.display = 'block';
+            errorContainer.innerHTML = `<div class="error-message">❌ ${message}</div>`;
+        }
+
+        function hideError() {
+            errorContainer.style.display = 'none';
+        }
+
+        function showLoading() {
+            resultContent.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>正在分析中，请稍候...</span>
+                </div>
+            `;
+        }
+
+        function getRatingClass(rating) {
+            if (rating === '优秀') return 'excellent';
+            if (rating === '良好') return 'good';
+            return 'poor';
+        }
+
+        function getScoreClass(score) {
+            if (score >= 70) return 'high';
+            if (score >= 60) return 'medium';
+            return 'low';
+        }
+
+        function formatAnalysisResult(data) {
+            if (data.error) {
+                return `<div class="error-message">❌ ${data.error}</div>`;
+            }
+
+            const ratingClass = getRatingClass(data.overall_rating);
+
+            let html = `
+                <div class="score-card">
+                    <div class="score-row" style="border-bottom: 2px solid #667eea;">
+                        <span class="score-label">股票名称</span>
+                        <span class="score-value">${data.name} (${data.code})</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">所属行业</span>
+                        <span class="score-value">${data.industry}</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">综合评级</span>
+                        <span class="rating-badge ${ratingClass}">${data.overall_rating}</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">赢面评估（V9.5）</span>
+                        <span class="score-value ${getScoreClass(data.win_rate)}">${data.win_rate}%</span>
+                    </div>
+                    <div class="score-row" style="font-size: 12px;">
+                        <span class="score-label">├─ 市值系数</span>
+                        <span class="score-value">${(data.mv_coeff * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="score-row" style="font-size: 12px;">
+                        <span class="score-label">├─ 情绪系数</span>
+                        <span class="score-value">${(data.emotion_coeff * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="score-row" style="font-size: 12px;">
+                        <span class="score-label">└─ 综合得分</span>
+                        <span class="score-value">${data.scores.overall}分</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">仓位建议</span>
+                        <span class="score-value" style="font-size: 13px;">${data.position_advice}</span>
+                    </div>
+                    <div style="margin-top: 10px; padding: 8px; background: #e8f5e9; border-radius: 6px; font-size: 11px; color: #2e7d32;">
+                        <strong>💡 V9.5优化：</strong>赢面 = 综合得分×市值系数×情绪系数。市值越大赢面越低，情绪好时赢面更高。仓位根据赢面和市值动态调整。
+                    </div>
+                </div>
+
+                <div class="score-card">
+                    <div class="result-title" style="font-size: 15px; margin-bottom: 10px;">📊 综合评分</div>
+                    <div class="score-row" style="border-bottom: 2px solid #667eea;">
+                        <span class="score-label">综合得分（短线优先）</span>
+                        <span class="score-value ${getScoreClass(data.scores.overall)}" style="font-size: 18px;">${data.scores.overall}分</span>
+                    </div>
+                    <div class="score-row" style="font-size: 13px;">
+                        <span class="score-label">├─ 短期得分（技术+情绪）</span>
+                        <span class="score-value ${getScoreClass(data.scores.short_term)}">${data.scores.short_term}分 (权重60%)</span>
+                    </div>
+                    <div class="score-row" style="font-size: 13px;">
+                        <span class="score-label">├─ 中期得分（题材+财务）</span>
+                        <span class="score-value ${getScoreClass(data.scores.medium_term)}">${data.scores.medium_term}分 (权重30%)</span>
+                    </div>
+                    <div class="score-row" style="font-size: 13px;">
+                        <span class="score-label">└─ 长期得分（行业成长）</span>
+                        <span class="score-value ${getScoreClass(data.scores.long_term)}">${data.scores.long_term}分 (权重10%)</span>
+                    </div>
+                    <div style="margin-top: 10px; padding: 8px; background: #e3f2fd; border-radius: 6px; font-size: 12px; color: #1565c0;">
+                        <strong>💡 说明：</strong>短线决定买点，中线决定趋势，长线决定赛道。权重分配：短期60% > 中期30% > 长期10%
+                    </div>
+                </div>
+
+                <div class="score-card">
+                    <div class="result-title" style="font-size: 15px; margin-bottom: 10px;">🎯 行业与题材</div>
+                    <div class="score-row">
+                        <span class="score-label">行业成长系数</span>
+                        <span class="score-value">${data.industry_growth.coefficient} (${data.industry_growth.score}分)</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">题材热度指数</span>
+                        <span class="score-value ${getScoreClass(data.theme_heat.index)}">${data.theme_heat.index}分</span>
+                    </div>
+                    <div class="score-row" style="font-size: 13px;">
+                        <span class="score-label">├─ 近期涨停热度</span>
+                        <span class="score-value">${data.theme_heat.limit_up_score}分 (30%)</span>
+                    </div>
+                    <div class="score-row" style="font-size: 13px;">
+                        <span class="score-label">├─ 催化逻辑</span>
+                        <span class="score-value">${data.theme_heat.catalyst_score}分 (30%)</span>
+                    </div>
+                    <div class="score-row" style="font-size: 13px;">
+                        <span class="score-label">└─ 行业成长</span>
+                        <span class="score-value">${data.theme_heat.growth_score}分 (40%)</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">催化原因</span>
+                        <span class="score-value" style="font-size: 13px;">${data.theme_heat.catalyst_reason}</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">近10日涨停</span>
+                        <span class="score-value">${data.technical.limit_up_count}次</span>
+                    </div>
+                </div>
+
+                <div class="score-card">
+                    <div class="result-title" style="font-size: 15px; margin-bottom: 10px;">💰 财务质量</div>
+                    <div class="score-row">
+                        <span class="score-label">财务得分</span>
+                        <span class="score-value ${getScoreClass(data.financial.score)}">${data.financial.score}/100</span>
+                    </div>
+                    ${data.financial.data.roe ? `<div class="score-row"><span class="score-label">ROE</span><span class="score-value">${data.financial.data.roe}%</span></div>` : ''}
+                    ${data.financial.data.grossprofit_margin ? `<div class="score-row"><span class="score-label">毛利率</span><span class="score-value">${data.financial.data.grossprofit_margin}%</span></div>` : ''}
+                    ${data.financial.data.or_yoy ? `<div class="score-row"><span class="score-label">营收增长</span><span class="score-value">${data.financial.data.or_yoy}%</span></div>` : ''}
+                </div>
+
+                <div class="score-card">
+                    <div class="result-title" style="font-size: 15px; margin-bottom: 10px;">📈 技术面</div>
+                    <div class="score-row">
+                        <span class="score-label">技术得分</span>
+                        <span class="score-value ${getScoreClass(data.technical.score)}">${data.technical.score}分</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">250日均线得分</span>
+                        <span class="score-value ${getScoreClass(data.technical.ma250_score)}">${data.technical.ma250_score}分</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">缠论买点得分</span>
+                        <span class="score-value ${getScoreClass(data.technical.chanlun_score)}">${data.technical.chanlun_score}分</span>
+                    </div>
+                    ${data.technical.data.close ? (() => {
+                        const pct = data.technical.data.pct_chg;
+                        const pctClass = pct > 0 ? 'up' : (pct < 0 ? 'down' : '');
+                        return `<div class="score-row"><span class="score-label">最新价</span><span class="score-value">${data.technical.data.close}元 (<span class="${pctClass}">${pct > 0 ? '+' : ''}${pct}%</span>)</span></div>`;
+                    })() : ''}
+                </div>
+
+                <div class="score-card">
+                    <div class="result-title" style="font-size: 15px; margin-bottom: 10px;">🏢 市值与情绪</div>
+                    <div class="score-row">
+                        <span class="score-label">总市值</span>
+                        <span class="score-value">${data.market_cap.total_mv}亿元</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">市值扣分</span>
+                        <span class="score-value low">-${data.market_cap.penalty}分</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">情绪周期</span>
+                        <span class="score-value">${data.emotion.current === 'unknown' ? '无法判断' : data.emotion.current}${data.emotion.score !== null ? ` (${data.emotion.score}分)` : ''}</span>
+                    </div>
+                </div>
+
+                ${data.basic.is_st ? '<div class="error-message" style="margin-top: 15px;">⚠️ 警告：这是一只ST股票，请谨慎投资！</div>' : ''}
+            `;
+
+            return html;
+        }
+
+        async function analyzeStock(code = null) {
+            const rawCode = code || stockInput.value.trim();
+
+            if (!rawCode) {
+                showError('请输入股票代码或名称');
+                return;
+            }
+
+            // 如果传入了代码，更新输入框显示
+            if (code) {
+                stockInput.value = code;
+            }
+
+            showLoading();
+            hideError();
+
+            try {
+                // 第一步：识别股票代码
+                let actualCode = rawCode;
+
+                // 如果输入的不是标准的股票代码格式（6位数字.SZ/.SH），先进行识别
+                if (!/^\d{6}\.(SZ|SH)$/.test(rawCode.toUpperCase())) {
+                    const recognizeResponse = await fetch(`${API_BASE_URL}/api/recognize?q=${encodeURIComponent(rawCode)}`);
+                    const recognizeData = await recognizeResponse.json();
+
+                    if (!recognizeResponse.ok) {
+                        showError(recognizeData.error || '股票识别失败');
+                        resultContent.innerHTML = '';
+                        return;
+                    }
+
+                    // 如果有多个匹配结果，让用户选择
+                    if (recognizeData.multiple) {
+                        showMultipleResults(recognizeData.results, rawCode);
+                        return;
+                    }
+
+                    // 使用识别到的股票代码
+                    // 兼容两种返回格式：
+                    // 1. 精确匹配：{ code: "xxx.SZ", multiple: false }
+                    // 2. 模糊匹配（单结果）：{ results: [{ code: "xxx.SZ" }], count: 1, multiple: false }
+                    if (recognizeData.code) {
+                        actualCode = recognizeData.code;
+                    } else if (recognizeData.results && recognizeData.results.length > 0) {
+                        actualCode = recognizeData.results[0].code;
+                    }
+                    stockInput.value = actualCode;
+                }
+
+                // 第二步：调用分析接口
+                const response = await fetch(`${API_BASE_URL}/api/analyze?code=${actualCode}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultContent.innerHTML = formatAnalysisResult(data);
+                } else {
+                    showError(data.error || '分析失败');
+                    resultContent.innerHTML = '';
+                }
+            } catch (error) {
+                console.error('分析失败:', error);
+                showError('网络错误：无法连接到分析服务。请确认后端服务已启动。');
+            }
+        }
+
+        // 显示多个匹配结果供用户选择
+        function showMultipleResults(results, query) {
+            let html = '<div class="multiple-results">';
+            html += '<h3>找到多个匹配结果，请选择：</h3>';
+            html += '<div class="results-list">';
+
+            results.forEach(stock => {
+                html += `<div class="result-item" onclick="selectStock('${stock.code}')">`;
+                html += `<div class="stock-name">${stock.name}</div>`;
+                html += `<div class="stock-code">${stock.code} (${stock.industry})</div>`;
+                html += '</div>';
+            });
+
+            html += '</div>';
+            html += '</div>';
+
+            resultContent.innerHTML = html;
+        }
+
+        // 选择股票
+        function selectStock(code) {
+            stockInput.value = code;
+            analyzeStock();
+        }
+
+        function quickSelect(stockCode) {
+            stockInput.value = stockCode;
+            stockInput.focus();
+        }
+
+        // 监听回车键
+        stockInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeStock();
+            }
+        });
+
+        // 页面加载时检查服务状态
+        window.onload = async function() {
+            updateStatus('connecting', '正在连接...');
+            const isHealthy = await checkHealth();
+            if (isHealthy) {
+                updateStatus('connected', '服务正常');
+            } else {
+                updateStatus('disconnected', '服务离线');
+                showError('无法连接到分析服务。请确认后端服务已启动：python stock_service.py');
+            }
+
+            // 设置打赏二维码图片
+            const qrImg = document.getElementById('donationQrCode');
+            if (qrImg) {
+                if (typeof DONATION_QR_CODE !== 'undefined') {
+                    qrImg.src = DONATION_QR_CODE;
+                } else {
+                    qrImg.parentElement.innerHTML = '<span style="color: rgba(255,255,255,0.7);">二维码加载中...</span>';
+                }
+            }
+
+            // 每10秒检查一次服务状态
+            setInterval(async () => {
+                const isHealthy = await checkHealth();
+                if (isHealthy) {
+                    updateStatus('connected', '服务正常');
+                    hideError();
+                } else {
+                    updateStatus('disconnected', '服务离线');
+                }
+            }, 10000);
+        };
+    </script>
+
+    <script src="qr_code.js"></script>
+    <script>
+        // 获取查询统计数据
+        async function loadQueryStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/stats`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 更新总查询次数（桌面端和移动端）
+                    document.getElementById('totalCount').textContent = data.total_count;
+                    const totalCountMobile = document.getElementById('totalCountMobile');
+                    if (totalCountMobile) {
+                        totalCountMobile.textContent = data.total_count;
+                    }
+
+                    // 更新热门股票列表
+                    const topStocksDiv = document.getElementById('topStocks');
+
+                    if (data.top_stocks && data.top_stocks.length > 0) {
+                        topStocksDiv.innerHTML = '';
+
+                        data.top_stocks.forEach((stock, index) => {
+                            const item = document.createElement('div');
+                            item.className = 'stock-card';
+                            item.onclick = () => analyzeStock(stock.code);
+
+                            const rank = index + 1;
+                            const rankEmoji = getRankEmoji(rank);
+
+                            item.innerHTML = `
+                                <div class="stock-card-header">
+                                    <span class="stock-rank">${rankEmoji}</span>
+                                    <span class="stock-name">${stock.name}</span>
+                                </div>
+                                <div class="stock-code">${stock.code}</div>
+                                <div class="stock-stats">
+                                    <span class="stock-stat query-count">🔥 ${stock.count} 次查询</span>
+                                </div>
+                            `;
+
+                            topStocksDiv.appendChild(item);
+                        });
+                    } else {
+                        topStocksDiv.innerHTML = '<div class="error-state">暂无查询记录</div>';
+                    }
+                } else {
+                    console.error('获取统计数据失败:', data.error);
+                }
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+
+        // 获取排名表情
+        function getRankEmoji(rank) {
+            const emojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣'];
+            return emojis[rank - 1] || `${rank}.`;
+        }
+
+        // 页面加载时获取统计数据
+        loadQueryStats();
+
+        // 每次分析后刷新统计数据
+        const originalAnalyzeStock = window.analyzeStock;
+        window.analyzeStock = async function(code) {
+            const result = await originalAnalyzeStock(code);
+            // 延迟1秒后刷新统计数据，确保后端已更新
+            setTimeout(loadQueryStats, 1000);
+            return result;
+        };
+
+        // 加载今日精选股票数据
+        async function loadTop3Stocks() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/top3-today`);
+                const data = await response.json();
+
+                if (response.ok && data.status === 'ok') {
+                    displayTop3Stocks(data.stocks);
+                } else {
+                    displayTop3Error(data.error || '加载今日精选数据失败');
+                }
+            } catch (error) {
+                console.error('加载今日精选数据失败:', error);
+                displayTop3Error('网络错误：无法加载今日精选数据');
+            }
+        }
+
+        // 显示今日精选股票数据
+        function displayTop3Stocks(stocks) {
+            const top3Content = document.getElementById('top3Content');
+
+            if (!stocks || stocks.length === 0) {
+                displayTop3Error('暂无今日精选数据');
+                return;
+            }
+
+            let html = '';
+
+            stocks.forEach(stock => {
+                const rankEmoji = getRankEmoji(stock.rank);
+                const isUp = stock.pct_chg > 0;
+                const isDown = stock.pct_chg < 0;
+                const totalMv = stock.total_mv ? stock.total_mv.toFixed(1) : '0.0';
+
+                html += `
+                    <div class="stock-card gold-theme" onclick="quickSelect('${stock.code}')">
+                        <div class="stock-card-header">
+                            <span class="stock-rank">${rankEmoji}</span>
+                            <span class="stock-name">${stock.name}</span>
+                        </div>
+                        <div class="stock-code">${stock.code}</div>
+                        <div class="stock-stats">
+                            <span class="stock-stat">价格: ${stock.price.toFixed(2)}元</span>
+                            <span class="stock-stat ${isUp ? 'up' : ''} ${isDown ? 'down' : ''}">${stock.pct_chg > 0 ? '+' : ''}${stock.pct_chg.toFixed(2)}%</span>
+                            <span class="stock-stat">市值: ${totalMv}亿</span>
+                            <span class="stock-stat highlight">得分: ${stock.overall_score.toFixed(1)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            top3Content.innerHTML = html;
+        }
+
+        // 显示今日精选错误信息
+        function displayTop3Error(message) {
+            const top3Content = document.getElementById('top3Content');
+            top3Content.innerHTML = `
+                <div class="error-state">
+                    <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>
+                    <div>${message}</div>
+                </div>
+            `;
+        }
+
+        // 获取排名表情
+        function getRankEmoji(rank) {
+            const emojis = ['🥇', '🥈', '🥉'];
+            return emojis[rank - 1] || `${rank}.`;
+        }
+
+        // 页面加载时获取今日精选股票数据
+        loadTop3Stocks();
+
+        // 每10分钟刷新一次今日精选数据
+        setInterval(loadTop3Stocks, 600000);
+    </script>
+</body>
+</html>

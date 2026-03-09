@@ -1,0 +1,51 @@
+# 日志文件
+*.log
+logs/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 虚拟环境
+venv/
+env/
+ENV/
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 临时文件
+*.tmp
+*.bak
+*.backup
+
+# 数据文件（可选，根据需要调整）
+*.csv
+*.json
+
+# 临时测试文件
+1111.jpg
+1111_base64.txt
+qr_*.txt
+qr_data.js
+test_*.py
+test_*.html
+test_*.sh
+
+# Node modules
+node_modules/
+
+# OpenClaw 内部配置
+.openclaw/
+
+# 密钥和敏感信息（如果有）
+*.pem
+*.key
+secrets/

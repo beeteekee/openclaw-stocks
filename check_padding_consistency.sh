@@ -1,0 +1,48 @@
+#!/bin/bash
+# 检查所有区域的padding一致性
+
+echo "========================================"
+echo "所有区域padding一致性检查"
+echo "========================================"
+echo ""
+
+echo "[桌面端padding]"
+echo "---"
+echo "Result-section:"
+grep "\.result-section {" -A 1 /Users/likan/.openclaw/workspace/stock-analysis.html | grep "padding:" | head -1
+echo ""
+echo "Top3-section:"
+grep "\.top3-section {" -A 1 /Users/likan/.openclaw/workspace/stock-analysis.html | grep "padding:"
+echo ""
+echo "Stats-section:"
+grep "\.stats-section {" -A 1 /Users/likan/.openclaw/workspace/stock-analysis.html | grep "padding:"
+
+echo ""
+echo "[移动端padding]"
+echo "---"
+echo "Result-section:"
+grep -A 20 "media (max-width: 768px)" /Users/likan/.openclaw/workspace/stock-analysis.html | grep -A 1 "\.result-section {" | grep "padding:"
+echo ""
+echo "Top3-section:"
+echo "（无特殊设置，使用桌面端padding: 20px)"
+echo ""
+echo "Stats-section:"
+echo "（无特殊设置，使用桌面端padding: 20px)"
+
+echo ""
+echo "[结论]"
+echo "---"
+echo "⚠️  发现不一致:"
+echo "  - Result-section移动端: 15px"
+echo "  - Top3-section和Stats-section: 20px"
+echo ""
+echo "这可能导致移动端视觉对齐问题！"
+echo ""
+echo "建议: 统一所有区域的padding"
+echo "  - 桌面端: 20px"
+echo "  - 移动端: 15px"
+
+echo ""
+echo "📝 是否需要统一padding？"
+echo "是：修改result-section的移动端padding为20px"
+echo "否：保持现状（可能需要其他调整）"
