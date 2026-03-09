@@ -2323,6 +2323,82 @@ def get_analysis_report():
         return jsonify({'error': str(e)}), 500
 
 
+
+
+@app.route('/api/sentiment', methods=['GET'])
+def analyze_sentiment():
+    """舆情分析API"""
+    stock_code = request.args.get('code')
+
+    if not stock_code:
+        return jsonify({'error': '请提供股票代码'}), 400
+
+    try:
+        # 获取股票基本信息
+        stock_info = pro.stock_basic(ts_code=stock_code, fields='ts_code,name')
+        if len(stock_info) == 0:
+            return jsonify({'error': f'未找到股票 {stock_code}'}), 404
+
+        stock_name = stock_info.iloc[0]['name']
+
+        # 模拟舆情分析数据（实际应接入真实舆情API）
+        sentiment_score = random.randint(60, 100)
+        sentiment_trend = '积极' if sentiment_score >= 80 else '中性' if sentiment_score >= 60 else '消极'
+
+        # 生成趋势数据（近7天）
+        trend_data = []
+        base_value = random.randint(40, 60)
+        for i in range(7):
+            value = base_value + random.randint(-10, 30)
+            value = max(0, min(100, value))
+            trend_data.append({
+                'date': f'3月{9-i}日',
+                'value': value
+            })
+        trend_data = trend_data[::-1]
+
+        # 生成热门评论
+        comments = generate_mock_comments(stock_name)
+
+        return jsonify({
+            'status': 'ok',
+            'stock_code': stock_code,
+            'stock_name': stock_name,
+            'sentiment_score': sentiment_score,
+            'sentiment_trend': sentiment_trend,
+            'trend_data': trend_data,
+            'comments': comments,
+            'timestamp': datetime.now().isoformat()
+        })
+
+    except Exception as e:
+        return jsonify({'error': f'舆情分析失败：{str(e)}'}), 500
+
+
+def generate_mock_comments(stock_name):
+    """生成模拟热门评论"""
+    positive_comments = [
+        {'content': f'{stock_name}表现不错，值得长期持有！', 'author': '投资者A', 'time': '2小时前', 'like': 128},
+        {'content': '财报数据超出预期，未来可期', 'author': '股神B', 'time': '3小时前', 'like': 95},
+        {'content': '技术面走势良好，支撑位稳固', 'author': '分析师C', 'time': '5小时前', 'like': 76},
+        {'content': '公司基本面扎实，持续看好', 'author': '价值投资D', 'time': '6小时前', 'like': 64}
+    ]
+
+    neutral_comments = [
+        {'content': '短期震荡，建议观望', 'author': '理性投资者F', 'time': '1小时前', 'like': 89},
+        {'content': '走势平稳，等待进一步信号', 'author': '技术分析G', 'time': '4小时前', 'like': 72}
+    ]
+
+    negative_comments = [
+        {'content': '今日调整，注意风险', 'author': '风险意识I', 'time': '30分钟前', 'like': 145},
+        {'content': '短期承压，建议减仓', 'author': '保守派J', 'time': '2小时前', 'like': 98}
+    ]
+
+    # 随机选择评论组合
+    all_comments = positive_comments + neutral_comments + negative_comments
+    random.shuffle(all_comments)
+    return all_comments[:8]
+
 @app.route('/api/health', methods=['GET'])
 def health():
     """健康检查"""
@@ -2336,4 +2412,4 @@ if __name__ == '__main__':
     print("  - GET /api/analyze?code=股票代码")
     print("  - GET /api/health")
     print("="*60)
-    app.run(host='127.0.0.1', port=FLASK_PORT, debug=True)
+    app.run(host='0.0.0.0', port=FLASK_PORT, debug=True)

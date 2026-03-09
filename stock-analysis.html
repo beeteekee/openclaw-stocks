@@ -896,39 +896,36 @@
                 <p style="color: #999; text-align: center;">请在上方输入股票代码进行分析</p>
             </div>
 
-            <!-- 今日精选和查询统计融合区域 -->
-            <div class="unified-section">
-                <!-- 桌面端：今日精选标题 -->
-                <div class="unified-header desktop-only">
-                    <div class="unified-title">🏆 今日精选</div>
-                </div>
+            <!-- 今日精选和查询统计并列展示区域 -->
+            <div class="unified-wrapper">
+                <!-- 今日精选区域 -->
+                <div class="unified-section">
+                    <!-- 今日精选标题 -->
+                    <div class="unified-header">
+                        <div class="unified-title">🏆 今日精选</div>
+                    </div>
 
-                <!-- 移动端：今日精选标题 -->
-                <div class="unified-title mobile-only">🏆 今日精选</div>
-
-                <!-- 今日精选股票列表 -->
-                <div class="top3-wrapper">
-                    <div id="top3Content" class="top3-content">
-                        <div class="loading-state">📊 正在加载今日精选数据...</div>
+                    <!-- 今日精选股票列表 -->
+                    <div class="top3-wrapper">
+                        <div id="top3Content" class="top3-content">
+                            <div class="loading-state">📊 正在加载今日精选数据...</div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 查询统计区域 -->
-            <div class="stats-section">
-                <!-- 桌面端：查询统计标题 -->
-                <div class="stats-header desktop-only">
-                    <div class="stats-title">📊 查询统计</div>
-                    <div class="stats-count">总查询: <span id="totalCount">0</span> 次</div>
-                </div>
+                <!-- 查询统计区域 -->
+                <div class="stats-section">
+                    <!-- 查询统计标题 -->
+                    <div class="stats-header">
+                        <div class="stats-title">📊 查询统计</div>
+                        <div class="stats-count">总查询: <span id="totalCount">0</span> 次</div>
+                    </div>
 
-                <!-- 移动端：查询统计标题 -->
-                <div class="stats-title mobile-only">📊 查询统计</div>
-
-                <!-- 查询统计内容 -->
-                <div class="stats-content-wrapper">
-                    <div class="stats-content" id="statsContent">
-                        <div class="loading-state">加载中...</div>
+                    <!-- 查询统计内容 -->
+                    <div class="stats-content-wrapper">
+                        <div class="stats-content" id="statsContent">
+                            <div class="loading-state">加载中...</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -936,12 +933,19 @@
     </div>
 
     <style>
+        /* 统一区域包装器（并列布局） */
+        .unified-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
         /* 统一区域样式（今日精选） */
         .unified-section {
             background: linear-gradient(135deg, rgba(30, 30, 40, 0.95) 0%, rgba(40, 40, 50, 0.95) 100%);
             border: 1px solid rgba(255, 255, 255, 0.15);
             padding: 15px;
-            margin-top: 12px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
@@ -951,7 +955,6 @@
             background: linear-gradient(135deg, rgba(60, 60, 70, 0.9) 0%, rgba(70, 70, 80, 0.9) 100%);
             border: 1px solid rgba(255, 255, 255, 0.15);
             padding: 15px;
-            margin-top: 12px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
@@ -1140,7 +1143,7 @@
     </style>
 
     <script>
-        const API_BASE_URL = 'http://127.0.0.1:5000';
+        const API_BASE_URL = '';  // 使用相对路径，自动适应当前域名
 
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
@@ -1152,7 +1155,19 @@
         // 检查服务器健康状态
         async function checkHealth() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/health`);
+                // 添加超时设置，移动端网络可能较慢
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+
+                const response = await fetch(`${API_BASE_URL}/api/health`, {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
                 if (data.status === 'ok') {
                     updateStatus('connected', '服务正常');
@@ -1161,6 +1176,10 @@
                 return false;
             } catch (error) {
                 console.error('健康检查失败:', error);
+                // 如果是超时错误，显示更友好的提示
+                if (error.name === 'AbortError') {
+                    console.error('请求超时');
+                }
                 return false;
             }
         }
@@ -1407,51 +1426,89 @@
             hideError();
 
             try {
+                // 创建超时控制器
+                const createTimeoutController = (timeoutMs = 15000) => {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+                    return { controller, timeoutId };
+                };
+
                 // 第一步：识别股票代码
                 let actualCode = rawCode;
 
                 // 如果输入的不是标准的股票代码格式（6位数字.SZ/.SH），先进行识别
                 if (!/^\d{6}\.(SZ|SH)$/.test(rawCode.toUpperCase())) {
-                    const recognizeResponse = await fetch(`${API_BASE_URL}/api/recognize?q=${encodeURIComponent(rawCode)}`);
-                    const recognizeData = await recognizeResponse.json();
+                    const { controller: recController, timeoutId: recTimeoutId } = createTimeoutController(15000);
+                    try {
+                        const recognizeResponse = await fetch(`${API_BASE_URL}/api/recognize?q=${encodeURIComponent(rawCode)}`, {
+                            signal: recController.signal
+                        });
+                        clearTimeout(recTimeoutId);
 
-                    if (!recognizeResponse.ok) {
-                        showError(recognizeData.error || '股票识别失败');
+                        if (!recognizeResponse.ok) {
+                            const recognizeData = await recognizeResponse.json();
+                            showError(recognizeData.error || '股票识别失败');
+                            resultContent.innerHTML = '';
+                            return;
+                        }
+
+                        const recognizeData = await recognizeResponse.json();
+
+                        // 如果有多个匹配结果，让用户选择
+                        if (recognizeData.multiple) {
+                            showMultipleResults(recognizeData.results, rawCode);
+                            return;
+                        }
+
+                        // 使用识别到的股票代码
+                        // 兼容两种返回格式：
+                        // 1. 精确匹配：{ code: "xxx.SZ", multiple: false }
+                        // 2. 模糊匹配（单结果）：{ results: [{ code: "xxx.SZ" }], count: 1, multiple: false }
+                        if (recognizeData.code) {
+                            actualCode = recognizeData.code;
+                        } else if (recognizeData.results && recognizeData.results.length > 0) {
+                            actualCode = recognizeData.results[0].code;
+                        }
+                        stockInput.value = actualCode;
+                    } catch (recError) {
+                        if (recError.name === 'AbortError') {
+                            showError('请求超时，请检查网络连接');
+                        } else {
+                            throw recError;
+                        }
                         resultContent.innerHTML = '';
                         return;
                     }
-
-                    // 如果有多个匹配结果，让用户选择
-                    if (recognizeData.multiple) {
-                        showMultipleResults(recognizeData.results, rawCode);
-                        return;
-                    }
-
-                    // 使用识别到的股票代码
-                    // 兼容两种返回格式：
-                    // 1. 精确匹配：{ code: "xxx.SZ", multiple: false }
-                    // 2. 模糊匹配（单结果）：{ results: [{ code: "xxx.SZ" }], count: 1, multiple: false }
-                    if (recognizeData.code) {
-                        actualCode = recognizeData.code;
-                    } else if (recognizeData.results && recognizeData.results.length > 0) {
-                        actualCode = recognizeData.results[0].code;
-                    }
-                    stockInput.value = actualCode;
                 }
 
                 // 第二步：调用分析接口
-                const response = await fetch(`${API_BASE_URL}/api/analyze?code=${actualCode}`);
-                const data = await response.json();
+                const { controller: anaController, timeoutId: anaTimeoutId } = createTimeoutController(30000); // 分析接口可能需要更长时间
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/analyze?code=${actualCode}`, {
+                        signal: anaController.signal
+                    });
+                    clearTimeout(anaTimeoutId);
 
-                if (response.ok) {
-                    resultContent.innerHTML = formatAnalysisResult(data);
-                } else {
-                    showError(data.error || '分析失败');
+                    if (response.ok) {
+                        const data = await response.json();
+                        resultContent.innerHTML = formatAnalysisResult(data);
+                    } else {
+                        const data = await response.json();
+                        showError(data.error || '分析失败');
+                        resultContent.innerHTML = '';
+                    }
+                } catch (anaError) {
+                    if (anaError.name === 'AbortError') {
+                        showError('分析超时，请稍后重试');
+                    } else {
+                        throw anaError;
+                    }
                     resultContent.innerHTML = '';
+                    return;
                 }
             } catch (error) {
                 console.error('分析失败:', error);
-                showError('网络错误：无法连接到分析服务。请确认后端服务已启动。');
+                showError('网络错误：无法连接到分析服务。请检查网络连接或稍后重试。');
             }
         }
 
@@ -1498,7 +1555,15 @@
         // 页面加载时检查服务状态
         window.onload = async function() {
             updateStatus('connecting', '正在连接...');
-            const isHealthy = await checkHealth();
+
+            // 添加重试机制，最多重试2次
+            let isHealthy = await checkHealth();
+            if (!isHealthy) {
+                console.log('第一次连接失败，正在重试...');
+                await new Promise(resolve => setTimeout(resolve, 2000)); // 等待2秒
+                isHealthy = await checkHealth();
+            }
+
             if (isHealthy) {
                 updateStatus('connected', '服务正常');
             } else {
@@ -1678,11 +1743,241 @@
             return emojis[rank - 1] || `${rank}.`;
         }
 
+        // 舆情分析功能
+        async function analyzeSentiment() {
+            const code = stockInput.value.trim();
+            if (!code) {
+                alert('请先输入股票代码进行分析');
+                return;
+            }
+
+            const btn = document.getElementById('analyzeSentimentBtn');
+            const resultDiv = document.getElementById('sentiment-result');
+
+            // 显示加载状态
+            btn.disabled = true;
+            btn.textContent = '分析中...';
+            resultDiv.style.display = 'none';
+
+            try {
+                // 调用后端API
+                const response = await fetch(`${API_BASE_URL}/api/sentiment?code=${encodeURIComponent(code)}`);
+                const data = await response.json();
+
+                if (response.ok && data.status === 'ok') {
+                    // 更新舆情评分
+                    document.getElementById('sentiment-score').textContent = `${data.sentiment_score}分`;
+                    document.getElementById('sentiment-score').className = `score-value ${data.sentiment_score >= 80 ? 'high' : data.sentiment_score >= 60 ? 'medium' : 'low'}`;
+
+                    // 更新舆情倾向
+                    document.getElementById('sentiment-trend').textContent = data.sentiment_trend;
+                    document.getElementById('sentiment-trend').className = `score-value ${data.sentiment_score >= 80 ? 'high' : data.sentiment_score >= 60 ? 'medium' : 'low'}`;
+
+                    // 绘制趋势图
+                    drawSentimentChart(data.trend_data);
+
+                    // 显示热门评论
+                    displaySentimentComments(data.comments);
+
+                    resultDiv.style.display = 'block';
+                } else {
+                    throw new Error(data.error || '舆情分析失败');
+                }
+            } catch (error) {
+                console.error('舆情分析失败:', error);
+                resultDiv.innerHTML = `<div style="color: #f44336; text-align: center; padding: 20px;">舆情分析失败：${error.message}</div>`;
+                resultDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '分析舆情';
+            }
+        }
+
+        // 生成趋势数据
+        function generateTrendData() {
+            const data = [];
+            const baseValue = Math.random() * 20 + 40; // 40-60基础值
+            for (let i = 0; i < 7; i++) {
+                const value = baseValue + Math.random() * 30 - 10; // 随机波动
+                data.push({
+                    date: `3月${9 - i}日`,
+                    value: Math.max(0, Math.min(100, Math.floor(value)))
+                });
+            }
+            return data.reverse(); // 按时间正序
+        }
+
+        // 绘制趋势图（使用Canvas）
+        function drawSentimentChart(data) {
+            const canvas = document.getElementById('sentiment-chart');
+            if (!canvas) return;
+
+            // 设置Canvas尺寸
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 40;
+
+            // 清空画布
+            ctx.clearRect(0, 0, width, height);
+
+            // 绘制背景
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, width, height);
+
+            // 绘制网格线
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (height - 2 * padding) * (1 - i / 5);
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+
+            // 绘制数据线
+            if (data.length > 0) {
+                const stepX = (width - 2 * padding) / (data.length - 1);
+                const stepY = (height - 2 * padding) / 100;
+
+                ctx.beginPath();
+                ctx.strokeStyle = sentimentScore >= 80 ? '#4CAF50' : sentimentScore >= 60 ? '#ff9800' : '#f44336';
+                ctx.lineWidth = 2;
+
+                data.forEach((point, index) => {
+                    const x = padding + index * stepX;
+                    const y = height - padding - point.value * stepY;
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+
+                ctx.stroke();
+
+                // 绘制数据点
+                data.forEach((point, index) => {
+                    const x = padding + index * stepX;
+                    const y = height - padding - point.value * stepY;
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                    ctx.fillStyle = sentimentScore >= 80 ? '#4CAF50' : sentimentScore >= 60 ? '#ff9800' : '#f44336';
+                    ctx.fill();
+                });
+            }
+
+            // 绘制坐标轴文字
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+
+            // X轴日期
+            data.forEach((point, index) => {
+                const x = padding + index * ((width - 2 * padding) / (data.length - 1));
+                ctx.fillText(point.date, x, height - 10);
+            });
+
+            // Y轴数值
+            for (let i = 0; i <= 5; i++) {
+                const value = i * 20;
+                const y = height - padding - value * ((height - 2 * padding) / 100);
+                ctx.textAlign = 'right';
+                ctx.fillText(value.toString(), padding - 5, y + 4);
+            }
+        }
+
+        // 生成模拟评论
+        function generateComments(code) {
+            const positiveComments = [
+                { content: '这只股票表现不错，值得长期持有！', author: '投资者A', time: '2小时前', like: 128 },
+                { content: '财报数据超出预期，未来可期', author: '股神B', time: '3小时前', like: 95 },
+                { content: '技术面走势良好，支撑位稳固', author: '分析师C', time: '5小时前', like: 76 },
+                { content: '公司基本面扎实，持续看好', author: '价值投资D', time: '6小时前', like: 64 },
+                { content: '今日成交量放大，资金进场明显', author: '短线高手E', time: '8小时前', like: 52 }
+            ];
+
+            const neutralComments = [
+                { content: '短期震荡，建议观望', author: '理性投资者F', time: '1小时前', like: 89 },
+                { content: '走势平稳，等待进一步信号', author: '技术分析G', time: '4小时前', like: 72 },
+                { content: '市场情绪一般，保持谨慎', author: '稳健派H', time: '7小时前', like: 58 }
+            ];
+
+            const negativeComments = [
+                { content: '今日调整，注意风险', author: '风险意识I', time: '30分钟前', like: 145 },
+                { content: '短期承压，建议减仓', author: '保守派J', time: '2小时前', like: 98 },
+                { content: '上方压力较大，冲高回落', author: '谨慎派K', time: '4小时前', like: 76 }
+            ];
+
+            // 随机选择评论组合
+            const allComments = [...positiveComments, ...neutralComments, ...negativeComments];
+            const selectedComments = allComments.sort(() => Math.random() - 0.5).slice(0, 8);
+
+            return selectedComments;
+        }
+
+        // 显示热门评论
+        function displaySentimentComments(comments) {
+            const commentsDiv = document.getElementById('sentiment-comments');
+            if (!commentsDiv) return;
+
+            if (comments.length === 0) {
+                commentsDiv.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">暂无评论数据</div>';
+                return;
+            }
+
+            let html = '';
+            comments.forEach(comment => {
+                html += `
+                    <div style="background: #f8f9fa; border-radius: 6px; padding: 10px; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span style="font-weight: 600; font-size: 13px;">${comment.author}</span>
+                            <span style="color: #999; font-size: 12px;">${comment.time}</span>
+                        </div>
+                        <div style="font-size: 13px; color: #333; margin-bottom: 6px;">${comment.content}</div>
+                        <div style="color: #666; font-size: 12px;">👍 ${comment.like}</div>
+                    </div>
+                `;
+            });
+
+            commentsDiv.innerHTML = html;
+        }
+
         // 页面加载时获取今日精选股票数据
         loadTop3Stocks();
 
         // 每10分钟刷新一次今日精选数据
         setInterval(loadTop3Stocks, 600000);
+
+        // 绑定舆情分析按钮事件
+        document.addEventListener('DOMContentLoaded', function() {
+            const analyzeBtn = document.getElementById('analyzeSentimentBtn');
+            if (analyzeBtn) {
+                analyzeBtn.addEventListener('click', analyzeSentiment);
+            }
+        });
+
+        // 绑定查看报告按钮事件
+        document.addEventListener('DOMContentLoaded', function() {
+            const viewReportBtn = document.getElementById('viewReportBtn');
+            if (viewReportBtn) {
+                viewReportBtn.addEventListener('click', function() {
+                    const reportContent = document.getElementById('report-content');
+                    if (reportContent) {
+                        reportContent.style.display = reportContent.style.display === 'none' ? 'block' : 'none';
+                    }
+                });
+            }
+        });
+
+        // 存储当前舆情评分用于绘图
+        let sentimentScore = 70;
     </script>
 </body>
 </html>
