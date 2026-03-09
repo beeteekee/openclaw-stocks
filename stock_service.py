@@ -21,6 +21,7 @@ CORS(app)
 # 从环境变量读取配置
 TUSHARE_TOKEN = os.getenv('TUSHARE_TOKEN')
 STATS_FILE = os.getenv('STATS_FILE', '/Users/likan/.openclaw/workspace/query_stats.json')
+TOP3_TODAY_FILE = os.getenv('TOP3_TODAY_FILE', '/Users/likan/.openclaw/workspace/top3_today_result.csv')
 FEISHU_APP_ID = os.getenv('FEISHU_APP_ID', '')
 FEISHU_APP_SECRET = os.getenv('FEISHU_APP_SECRET', '')
 FEISHU_REGION = os.getenv('FEISHU_REGION', 'cn')
@@ -1163,7 +1164,7 @@ def get_query_stats():
 def get_top3_today():
     """获取今日精选股票API"""
     try:
-        csv_path = '/Users/likan/.openclaw/workspace/top3_today_result.csv'
+        csv_path = TOP3_TODAY_FILE
 
         if not os.path.exists(csv_path):
             return jsonify({
