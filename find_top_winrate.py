@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """查找赢面最高的股票"""
 
+import os
 import tushare as ts
 import pandas as pd
 import numpy as np
@@ -8,7 +9,7 @@ from datetime import datetime, timedelta
 import warnings
 warnings.filterwarnings('ignore')
 
-TUSHARE_TOKEN = "e2e547ffbac099527efcaaa0072f0a3adea8eb8fd9efba3b65da7518"
+TUSHARE_TOKEN = os.getenv("TUSHARE_TOKEN")
 
 # 行业成长系数表
 INDUSTRY_GROWTH = {

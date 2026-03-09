@@ -201,10 +201,11 @@ Python 3.9.6
 
 **脚本中的Token:**
 ```python
-TUSHARE_TOKEN = "e2e547ffbac099527efcaaa0072f0a3adea8eb8fd9efba3b65da7518"
+TUSHARE_TOKEN = os.getenv("TUSHARE_TOKEN")
 ```
 
 **说明:**
+- Token从环境变量读取（配置在.env文件中）
 - Token已设置，长度正确
 - 可以正常访问Tushare API
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """选出今天评分最靠前的三个股票（排除北交所和科创板）"""
 
+import os
 import tushare as ts
 import pandas as pd
 import numpy as np
@@ -8,7 +9,7 @@ from datetime import datetime, timedelta
 import warnings
 warnings.filterwarnings('ignore')
 
-TUSHARE_TOKEN = "e2e547ffbac099527efcaaa0072f0a3adea8eb8fd9efba3b65da7518"
+TUSHARE_TOKEN = os.getenv("TUSHARE_TOKEN")
 
 # 行业成长系数表
 INDUSTRY_GROWTH = {

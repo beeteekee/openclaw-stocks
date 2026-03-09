@@ -104,7 +104,7 @@
 # 查看比亚迪(002594.SZ)的基本信息
 python3 -c "
 import tushare as ts
-ts.set_token('e2e547ffbac099527efcaaa0072f0a3adea8eb8fd9efba3b65da7518')
+ts.set_token(os.getenv("TUSHARE_TOKEN")))
 pro = ts.pro_api()
 df = pro.stock_basic(ts_code='002594.SZ', fields='ts_code,name,industry,list_date')
 print(df.to_string())
@@ -116,7 +116,7 @@ print(df.to_string())
 # 查看比亚迪的财务数据
 python3 -c "
 import tushare as ts
-ts.set_token('e2e547ffbac099527efcaaa0072f0a3adea8eb8fd9efba3b65da7518')
+ts.set_token(os.getenv("TUSHARE_TOKEN")))
 pro = ts.pro_api()
 df = pro.fina_indicator(ts_code='002594.SZ', start_date='20240101', end_date='20250930')
 print(df[['ts_code','end_date','roe','or_yoy']].head().to_string())

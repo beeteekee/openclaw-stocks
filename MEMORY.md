@@ -1,4 +1,4 @@
-使用tushare获取数据，token为e2e547ffbac099527efcaaa0072f0a3adea8eb8fd9efba3b65da7518
+使用tushare获取数据，token从环境变量TUSHARE_TOKEN读取（配置在.env文件中）
 
 ---
 

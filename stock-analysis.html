@@ -1264,6 +1264,41 @@
                     </div>
                 </div>
 
+                <!-- 舆情分析卡片 -->
+                <div class="score-card">
+                    <div class="result-title" style="font-size: 15px; margin-bottom: 10px;">
+                        📰 舆情分析
+                        <button id="analyzeSentimentBtn" style="float: right; padding: 4px 10px; font-size: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">分析舆情</button>
+                    </div>
+                    <div id="sentiment-result" style="display: none;">
+                        <div class="score-row">
+                            <span class="score-label">舆情评分</span>
+                            <span id="sentiment-score" class="score-value">--</span>
+                        </div>
+                        <div class="score-row">
+                            <span class="score-label">舆情倾向</span>
+                            <span id="sentiment-trend" class="score-value">--</span>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <div style="font-size: 12px; margin-bottom: 8px; color: #666;">舆情趋势</div>
+                            <div id="sentiment-chart" style="height: 200px; width: 100%;"></div>
+                        </div>
+                        <div style="margin-top: 10px; max-height: 300px; overflow-y: auto;">
+                            <div style="font-size: 12px; margin-bottom: 8px; color: #666;">热门评论</div>
+                            <div id="sentiment-comments"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 格式化报告卡片 -->
+                <div class="score-card">
+                    <div class="result-title" style="font-size: 15px; margin-bottom: 10px;">
+                        📋 详细报告
+                        <button id="viewReportBtn" style="float: right; padding: 4px 10px; font-size: 12px; background: #764ba2; color: white; border: none; border-radius: 4px; cursor: pointer;">查看报告</button>
+                    </div>
+                    <div id="report-content" style="display: none; font-size: 13px; line-height: 1.6;"></div>
+                </div>
+
                 ${data.basic.is_st ? '<div class="error-message" style="margin-top: 15px;">⚠️ 警告：这是一只ST股票，请谨慎投资！</div>' : ''}
             `;
 

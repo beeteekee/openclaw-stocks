@@ -8,6 +8,7 @@
 
 """
 
+import os
 import tushare as ts
 import pandas as pd
 import numpy as np
@@ -17,7 +18,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # 从MEMORY.md中获取的token
-TUSHARE_TOKEN = "e2e547ffbac099527efcaaa0072f0a3adea8eb8fd9efba3b65da7518"
+TUSHARE_TOKEN = os.getenv("TUSHARE_TOKEN")
 
 # 行业成长系数表
 INDUSTRY_GROWTH = {

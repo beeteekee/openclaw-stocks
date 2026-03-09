@@ -67,7 +67,7 @@ python analyze_stock.py --help
 ### 技能5：数据源管理
 **功能**：管理Tushare API token和数据获取
 
-**配置位置**：`TUSHARE_TOKEN = "e2e547ffbac099527efcaaa0072f0a3adea8eb8fd9efba3b65da7518"`
+**配置位置**：`TUSHARE_TOKEN = os.getenv("TUSHARE_TOKEN")`
 
 **注意**：token保存在MEMORY.md中，不要泄露
 
