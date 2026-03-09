@@ -49,3 +49,9 @@ node_modules/
 *.pem
 *.key
 secrets/
+
+# 环境变量文件（包含所有密钥和敏感配置）
+.env
+
+# BettaFish 项目（如果克隆到workspace）
+BettaFish/
