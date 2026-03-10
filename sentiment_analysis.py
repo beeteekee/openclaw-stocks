@@ -134,88 +134,20 @@ def _calculate_sentiment_trend_bettafish(analyzer: SentimentAnalyzer,
     Returns:
         (情绪倾向分, 情感分析详情)
     """
-    # 构建模拟舆情文本（实际应用中需要从社交媒体获取）
-    sentiment_texts = []
+    # 数据求真原则：没有真实舆情数据源，不使用模拟数据
+    print(f"  ⚠️ 缺少真实舆情数据源（如东方财富股吧、雪球、微博等）")
+    print(f"  ⚠️ 舆情分析功能暂时禁用")
+    print(f"  ⚠️ 不使用模拟数据，保持数据真实性")
 
-    if limit_up_count >= 2 and growth_coeff >= 0.7:
-        sentiment_texts = [
-            f"{stock_name}最近表现强势，连续涨停让人眼前一亮！",
-            f"看好{stock_name}的长期发展，成长性很强！",
-            f"{stock_name}的技术突破非常牛，未来可期！"
-        ]
-    elif limit_up_count >= 1 and growth_coeff >= 0.7:
-        sentiment_texts = [
-            f"{stock_name}最近有点热度，值得关注一下。",
-            f"{stock_name}的基本面还可以，成长性不错。",
-            f"今天{stock_name}涨停了，有点意外。"
-        ]
-    elif limit_up_count >= 1:
-        sentiment_texts = [
-            f"{stock_name}今天涨停了，不知道能不能持续。",
-            f"追了{stock_name}，希望不要翻车。",
-            f"{stock_name}有点炒作嫌疑，要小心。"
-        ]
-    else:
-        sentiment_texts = [
-            f"{stock_name}最近没什么动静，平淡。",
-            f"{stock_name}的表现一般般，没什么亮点。",
-            f"观望{stock_name}，看看后续走势。"
-        ]
-
-    # 使用BettaFish分析情感
-    total_positive = 0
-    total_negative = 0
-    total_confidence = 0
-    sentiment_details = []
-
-    for text in sentiment_texts:
-        result = analyzer.analyze(text)
-        total_positive += result.positive_score
-        total_negative += result.negative_score
-        total_confidence += result.confidence
-        sentiment_details.append({
-            'text': text,
-            'label': result.label,
-            'confidence': result.confidence,
-            'positive_score': result.positive_score,
-            'negative_score': result.negative_score,
-            'neutral_score': result.neutral_score
-        })
-
-    # 计算平均分数
-    avg_positive = total_positive / len(sentiment_texts)
-    avg_negative = total_negative / len(sentiment_texts)
-    avg_confidence = total_confidence / len(sentiment_texts)
-
-    # 根据情感倾向计算分数
-    if avg_positive > avg_negative:
-        sentiment_label = 'positive'
-        # 正面情绪：80-100分
-        sentiment_score = 60 + avg_positive * 40
-    elif avg_negative > avg_positive:
-        sentiment_label = 'negative'
-        # 负面情绪：20-40分
-        sentiment_score = 20 + (1 - avg_negative) * 20
-    else:
-        sentiment_label = 'neutral'
-        # 中性情绪：40-60分
-        sentiment_score = 50
-
-    sentiment_score = min(100, max(0, sentiment_score))
-
-    print(f"  BettaFish情感分析:")
-    print(f"    ├─ 平均正面分: {avg_positive:.2f}")
-    print(f"    ├─ 平均负面分: {avg_negative:.2f}")
-    print(f"    ├─ 平均置信度: {avg_confidence:.2f}")
-    print(f"    └─ 情感极性: {sentiment_label}")
-
-    return sentiment_score, {
-        'label': sentiment_label,
-        'confidence': avg_confidence,
-        'avg_positive': avg_positive,
-        'avg_negative': avg_negative,
-        'text_count': len(sentiment_texts),
-        'details': sentiment_details
+    return 0.0, {
+        'label': 'neutral',
+        'confidence': 0.0,
+        'avg_positive': 0.0,
+        'avg_negative': 0.0,
+        'text_count': 0,
+        'details': [],
+        'data_source_missing': True,
+        'reason': '缺少真实舆情数据源，不使用模拟数据'
     }
 
 

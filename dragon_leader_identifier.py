@@ -131,9 +131,11 @@ class DragonLeaderIdentifier:
         Returns:
             封板时间评分（0-100）
         """
+        # 数据求真原则：没有封板时间数据时，不使用假设数据
         if limit_up_time is None:
-            print("  封板时间: 未提供（假设为收盘前封板）")
-            return 50  # 没有封板时间信息，给中等分
+            print("  ⚠️ 缺少封板时间数据（需要从Level-2数据或专业数据源获取）")
+            print("  ⚠️ 封板时间评分功能暂时禁用")
+            return 0.0  # 没有数据时不评分
 
         try:
             # 解析封板时间
@@ -174,12 +176,16 @@ class DragonLeaderIdentifier:
 
         except Exception as e:
             print(f"  ⚠️ 解析封板时间失败: {e}")
-            return 50
+            return 0.0
 
     def _calculate_board_effect_score(self, stock_code: str, industry: str,
                                     limit_up_count: int, growth_coeff: float) -> float:
         """
         计算带动效应评分
+
+        ⚠️ 数据求真原则：真正的带动效应应该是"这只股涨停后，同板块有多少只跟风涨停"
+       当前实现基于涨停次数和行业成长推断，这是不严谨的
+       需要获取板块涨停关系数据才能准确计算
 
         Args:
             stock_code: 股票代码
@@ -190,30 +196,11 @@ class DragonLeaderIdentifier:
         Returns:
             带动效应评分（0-100）
         """
-        # 基于涨停次数和行业成长判断带动效应
-        if limit_up_count >= 3 and growth_coeff >= 0.7:
-            score = 100
-            reason = "连续涨停+高成长，带动效应极强"
-        elif limit_up_count >= 2 and growth_coeff >= 0.7:
-            score = 85
-            reason = "多次涨停+高成长，带动效应强"
-        elif limit_up_count >= 1 and growth_coeff >= 0.7:
-            score = 70
-            reason = "有涨停+高成长，有一定带动效应"
-        elif limit_up_count >= 2:
-            score = 60
-            reason = "多次涨停，有带动效应"
-        elif limit_up_count == 1:
-            score = 50
-            reason = "一次涨停，带动效应有限"
-        else:
-            score = 30
-            reason = "无涨停，带动效应弱"
+        print(f"  ⚠️ 缺少板块涨停关系数据（无法准确计算带动效应）")
+        print(f"  ⚠️ 带动效应评分功能暂时禁用")
+        print(f"  ⚠️ 真正的带动效应需要：这只股涨停后，同板块有多少只跟风涨停")
 
-        print(f"  带动效应: {score}/100")
-        print(f"    （{reason}）")
-
-        return score
+        return 0.0
 
     def _calculate_board_status_score(self, stock_code: str, industry: str,
                                    market_cap: float, growth_coeff: float) -> float:
@@ -229,10 +216,11 @@ class DragonLeaderIdentifier:
         Returns:
             板块地位评分（0-100）
         """
-        # 基于市值和行业成长判断板块地位
+        # 数据求真原则：没有市值数据时，不使用假设数据
         if market_cap is None:
-            print("  板块地位: 未提供市值（假设为中等地位）")
-            return 60  # 没有市值信息，给中等分
+            print("  ⚠️ 缺少市值数据")
+            print("  ⚠️ 板块地位评分功能暂时禁用")
+            return 0.0  # 没有数据时不评分
 
         if market_cap > 500:
             score = 100
