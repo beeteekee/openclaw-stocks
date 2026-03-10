@@ -520,6 +520,21 @@ def analyze_stock(stock_code):
                                                    limit_up_count, growth_coeff, concepts)
     sentiment_heat_score = sentiment_result['sentiment_heat_score']
 
+    # 步骤6: 龙头识别优化（V10.2新增）
+    from dragon_leader_identifier import DragonLeaderIdentifier
+
+    dragon_identifier = DragonLeaderIdentifier()
+    dragon_result = dragon_identifier.identify_leader(
+        stock_code=stock_code,
+        stock_name=stock_info['name'],
+        industry=stock_info['industry'],
+        limit_up_count=limit_up_count,
+        growth_coeff=growth_coeff,
+        concepts=concepts,
+        market_cap=total_mv,
+        limit_up_time=None  # TODO: 需要从K线数据中获取封板时间
+    )
+
     # 综合评分
     scores = calculate_comprehensive_score(growth_coeff, financial_score, tech_score,
                                           limit_up_score, catalyst_score, sentiment_heat_score)

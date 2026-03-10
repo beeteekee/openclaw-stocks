@@ -1580,6 +1580,21 @@ def analyze_stock():
                                                        limit_up_count, growth_coeff, concepts)
         sentiment_heat_score = sentiment_result['sentiment_heat_score']
 
+        # V10.2: 龙头识别优化
+        from dragon_leader_identifier import DragonLeaderIdentifier
+
+        dragon_identifier = DragonLeaderIdentifier()
+        dragon_result = dragon_identifier.identify_leader(
+            stock_code=stock_code,
+            stock_name=stock_info['name'],
+            industry=stock_info['industry'],
+            limit_up_count=limit_up_count,
+            growth_coeff=growth_coeff,
+            concepts=concepts,
+            market_cap=total_mv,
+            limit_up_time=None  # TODO: 需要从K线数据中获取封板时间
+        )
+
         # 综合评分
         long_term_score = growth_score  # V8.0: 长期只看行业成长系数
         medium_term_score = (theme_heat_index * 0.5) + (financial_score * 0.3) + (tech_score * 0.2)
@@ -1757,6 +1772,7 @@ def analyze_stock():
                 'type': dragon_type,
                 'desc': dragon_desc
             },
+            'dragon_v2': dragon_result,  # V10.2: 龙头识别优化结果
             'emotion': {
                 'score': emotion_score,
                 'current': current_emotion
