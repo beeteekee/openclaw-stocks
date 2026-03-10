@@ -312,7 +312,7 @@ def catalyst_logic_evaluation(stock_info, limit_up_count, growth_coeff, concepts
 
     return score
 
-def calculate_comprehensive_score(growth_coeff, financial_score, tech_score, limit_up_score, catalyst_score):
+def calculate_comprehensive_score(growth_coeff, financial_score, tech_score, limit_up_score, catalyst_score, sentiment_heat_score=None):
     """综合评分"""
     print("\n" + "="*60)
     print("综合评分")
@@ -335,12 +335,19 @@ def calculate_comprehensive_score(growth_coeff, financial_score, tech_score, lim
     # 中期综合得分 = 题材热度指数×50% + 财务质量分×30% + 中期趋势分×20%
     medium_term_score = (theme_heat_index * 0.5) + (financial_score * 0.3) + (tech_score * 0.2)
 
-    # 短期综合得分 = 技术面分×60% + 题材热度指数×40%
-    short_term_score = (tech_score * 0.6) + (theme_heat_index * 0.4)
+    # V10.0: 融合舆情热度分到短期评分
+    # 新公式：短期综合得分 = 技术面分×70% + 舆情热度分×20% + 题材热度指数×10%
+    if sentiment_heat_score is not None:
+        short_term_score = (tech_score * 0.7) + (sentiment_heat_score * 0.2) + (theme_heat_index * 0.1)
+        print(f"\n📊 舆情热度得分: {sentiment_heat_score:.1f}/100（已融入短期评分）")
+    else:
+        # 降级：未提供舆情热度分时，使用旧公式
+        short_term_score = (tech_score * 0.6) + (theme_heat_index * 0.4)
+        print(f"\n⚠ 舆情热度得分: 未提供（使用降级公式）")
 
     print(f"\n长期综合得分: {long_term_score:.1f}/100")
     print(f"中期综合得分: {medium_term_score:.1f}/100")
-    print(f"短期综合得分: {short_term_score:.1f}/100")
+    print(f"短期综合得分: {short_term_score:.1f}/100 (技术面70% + 舆情热度20% + 题材热度10%)")
 
     # V9.5: 综合得分优化（直接综合得分，市值扣分已在短期评分中体现）
     overall_score = (short_term_score * 0.6) + (medium_term_score * 0.3) + (long_term_score * 0.1)
@@ -350,7 +357,8 @@ def calculate_comprehensive_score(growth_coeff, financial_score, tech_score, lim
         'long_term': long_term_score,
         'medium_term': medium_term_score,
         'short_term': short_term_score,
-        'theme_heat': theme_heat_index
+        'theme_heat': theme_heat_index,
+        'sentiment_heat': sentiment_heat_score
     }
 
 def calculate_win_rate_and_position(overall_score, total_mv, current_emotion='neutral'):
@@ -496,9 +504,25 @@ def analyze_stock(stock_code):
     # 催化逻辑评分
     catalyst_score = catalyst_logic_evaluation(stock_info, limit_up_count, growth_coeff)
 
+    # 步骤5: 舆情热度分析（V10.0新增）
+    from sentiment_analysis import calculate_sentiment_score
+
+    # 获取概念板块信息（前面已经获取过，这里直接使用）
+    concepts = []
+    try:
+        concept_df = pro.concept_detail(ts_code=stock_code)
+        if len(concept_df) > 0:
+            concepts = concept_df['concept_name'].tolist()
+    except Exception as e:
+        print(f"⚠ 获取概念板块失败: {e}")
+
+    sentiment_result = calculate_sentiment_score(stock_code, stock_info['name'],
+                                                   limit_up_count, growth_coeff, concepts)
+    sentiment_heat_score = sentiment_result['sentiment_heat_score']
+
     # 综合评分
     scores = calculate_comprehensive_score(growth_coeff, financial_score, tech_score,
-                                          limit_up_score, catalyst_score)
+                                          limit_up_score, catalyst_score, sentiment_heat_score)
 
     # 计算综合得分（V9.5）
     overall_score = (scores['short_term'] * 0.6) + (scores['medium_term'] * 0.3) + (scores['long_term'] * 0.1)

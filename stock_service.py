@@ -1573,6 +1573,13 @@ def analyze_stock():
         # 获取真实的市场情绪周期
         current_emotion, emotion_score = get_market_emotion()
 
+        # V10.0: 舆情热度分析
+        from sentiment_analysis import calculate_sentiment_score
+
+        sentiment_result = calculate_sentiment_score(stock_code, stock_info['name'],
+                                                       limit_up_count, growth_coeff, concepts)
+        sentiment_heat_score = sentiment_result['sentiment_heat_score']
+
         # 综合评分
         long_term_score = growth_score  # V8.0: 长期只看行业成长系数
         medium_term_score = (theme_heat_index * 0.5) + (financial_score * 0.3) + (tech_score * 0.2)
@@ -1584,11 +1591,8 @@ def analyze_stock():
                 print("⚠️ 市场情绪周期无法判断，使用中性情绪评分（50分）")
                 current_emotion = 'neutral'  # 设置为中性情绪
 
-        # 计算短期评分（V9.0：技术面80% + 情绪周期20% - 市值扣分）
-        if emotion_score is not None:
-            short_term_score = (tech_score * 0.8) + (emotion_score * 0.2) - market_cap_penalty
-        else:
-            short_term_score = (tech_score * 0.8) - market_cap_penalty
+        # 计算短期评分（V10.0：技术面70% + 舆情热度20% + 题材热度10% - 市值扣分）
+        short_term_score = (tech_score * 0.7) + (sentiment_heat_score * 0.2) + (theme_heat_index * 0.1) - market_cap_penalty
 
         # 确保评分在合理范围内
         short_term_score = max(0, min(100, short_term_score))
@@ -1757,6 +1761,7 @@ def analyze_stock():
                 'score': emotion_score,
                 'current': current_emotion
             },
+            'sentiment': sentiment_result,  # V10.0: 舆情热度分析结果
             'scores': {
                 'long_term': long_term_score,
                 'medium_term': round(medium_term_score, 1),
