@@ -1765,24 +1765,47 @@
                 const response = await fetch(`${API_BASE_URL}/api/sentiment?code=${encodeURIComponent(code)}`);
                 const data = await response.json();
 
-                if (response.ok && data.status === 'ok') {
-                    // 更新舆情评分
-                    document.getElementById('sentiment-score').textContent = `${data.sentiment_score}分`;
-                    document.getElementById('sentiment-score').className = `score-value ${data.sentiment_score >= 80 ? 'high' : data.sentiment_score >= 60 ? 'medium' : 'low'}`;
+                if (response.ok) {
+                    if (data.status === 'disabled') {
+                        // 舆情分析功能已禁用
+                        resultDiv.innerHTML = `
+                            <div style="padding: 20px; text-align: center; color: #ff9800;">
+                                <div style="font-size: 24px; margin-bottom: 10px;">📰 舆情分析</div>
+                                <div style="background: rgba(255, 152, 0, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                    <strong>功能状态：</strong>已禁用（符合数据求真原则）
+                                </div>
+                                <div style="text-align: left; padding: 15px; background: rgba(255, 255, 255, 0.5); border-radius: 8px;">
+                                    <p><strong>原因：</strong>${data.reason}</p>
+                                    <p><strong>所需数据源：</strong></p>
+                                    <ul style="margin-left: 20px;">
+                                        ${data.data_source_required.map(source => `<li>${source}</li>`).join('')}
+                                    </ul>
+                                    <p style="margin-top: 10px; color: #666;">${data.note}</p>
+                                </div>
+                            </div>
+                        `;
+                        resultDiv.style.display = 'block';
+                    } else if (data.status === 'ok') {
+                        // 舆情分析正常（未来接入真实数据源后使用）
+                        document.getElementById('sentiment-score').textContent = `${data.sentiment_score}分`;
+                        document.getElementById('sentiment-score').className = `score-value ${data.sentiment_score >= 80 ? 'high' : data.sentiment_score >= 60 ? 'medium' : 'low'}`;
 
-                    // 更新舆情倾向
-                    document.getElementById('sentiment-trend').textContent = data.sentiment_trend;
-                    document.getElementById('sentiment-trend').className = `score-value ${data.sentiment_score >= 80 ? 'high' : data.sentiment_score >= 60 ? 'medium' : 'low'}`;
+                        // 更新舆情倾向
+                        document.getElementById('sentiment-trend').textContent = data.sentiment_trend;
+                        document.getElementById('sentiment-trend').className = `score-value ${data.sentiment_score >= 80 ? 'high' : data.sentiment_score >= 60 ? 'medium' : 'low'}`;
 
-                    // 绘制趋势图
-                    drawSentimentChart(data.trend_data);
+                        // 绘制趋势图
+                        drawSentimentChart(data.trend_data);
 
-                    // 显示热门评论
-                    displaySentimentComments(data.comments);
+                        // 显示热门评论
+                        displaySentimentComments(data.comments);
 
-                    resultDiv.style.display = 'block';
+                        resultDiv.style.display = 'block';
+                    } else {
+                        throw new Error(data.error || '舆情分析失败');
+                    }
                 } else {
-                    throw new Error(data.error || '舆情分析失败');
+                    throw new Error(`HTTP ${response.status}: ${data.error || '舆情分析失败'}`);
                 }
             } catch (error) {
                 console.error('舆情分析失败:', error);

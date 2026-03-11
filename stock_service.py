@@ -2313,7 +2313,7 @@ def format_analysis_report(data):
 @app.route('/api/report', methods=['GET'])
 def get_analysis_report():
     """
-    获取格式化的分析报告
+    获取格式化的分析报告（可分享版本）
 
     Query参数:
         code: 股票代码（如：600000.SH）
@@ -2327,77 +2327,65 @@ def get_analysis_report():
         return jsonify({'error': '请提供股票代码'}), 400
 
     try:
-        # 调用analyze_stock获取完整数据
-        stock_result = analyze_stock_internal(stock_code)
+        # 创建模拟的request对象来调用analyze_stock函数
+        from werkzeug.test import EnvironBuilder
 
-        if isinstance(stock_result, tuple) and stock_result[1] != 200:
-            # 如果是错误响应
-            return stock_result
+        # 构建环境
+        builder = EnvironBuilder(method='GET', path=f'/api/analyze?code={stock_code}')
+        env = builder.get_environ()
+
+        # 模拟request上下文
+        with app.test_request_context(environ_overrides=env):
+            from flask import request as flask_request
+            # 调用analyze_stock函数
+            result = analyze_stock()
+
+        # 分析响应
+        if hasattr(result, 'status_code') and result.status_code != 200:
+            response_data = result.get_json()
+            return jsonify(response_data), result.status_code
+
+        # 解析JSON响应
+        import json
+        response_data = result.get_json() if hasattr(result, 'get_json') else json.loads(result.get_data(as_text=True))
 
         # 格式化报告
-        formatted_report = format_analysis_report(stock_result[0])
+        formatted_report = format_analysis_report(response_data)
 
         return jsonify({
+            'status': 'ok',
             'code': stock_code,
-            'name': stock_result[0]['name'],
+            'name': response_data.get('name', ''),
             'report': formatted_report,
-            'data': stock_result[0]  # 包含原始数据供前端使用
+            'data': response_data
         })
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'生成报告失败：{str(e)}'}), 500
 
 
 
 
 @app.route('/api/sentiment', methods=['GET'])
 def analyze_sentiment():
-    """舆情分析API"""
-    stock_code = request.args.get('code')
+    """
+    舆情分析API（已禁用，符合数据求真原则）
 
-    if not stock_code:
-        return jsonify({'error': '请提供股票代码'}), 400
+    根据养家心法第3条"数据求真原则"，严禁使用模拟数据。
+    此功能需要接入真实舆情数据源（如东方财富股吧、雪球、微博等）。
 
-    try:
-        # 获取股票基本信息
-        stock_info = pro.stock_basic(ts_code=stock_code, fields='ts_code,name')
-        if len(stock_info) == 0:
-            return jsonify({'error': f'未找到股票 {stock_code}'}), 404
-
-        stock_name = stock_info.iloc[0]['name']
-
-        # 模拟舆情分析数据（实际应接入真实舆情API）
-        sentiment_score = random.randint(60, 100)
-        sentiment_trend = '积极' if sentiment_score >= 80 else '中性' if sentiment_score >= 60 else '消极'
-
-        # 生成趋势数据（近7天）
-        trend_data = []
-        base_value = random.randint(40, 60)
-        for i in range(7):
-            value = base_value + random.randint(-10, 30)
-            value = max(0, min(100, value))
-            trend_data.append({
-                'date': f'3月{9-i}日',
-                'value': value
-            })
-        trend_data = trend_data[::-1]
-
-        # 生成热门评论
-        comments = generate_mock_comments(stock_name)
-
-        return jsonify({
-            'status': 'ok',
-            'stock_code': stock_code,
-            'stock_name': stock_name,
-            'sentiment_score': sentiment_score,
-            'sentiment_trend': sentiment_trend,
-            'trend_data': trend_data,
-            'comments': comments,
-            'timestamp': datetime.now().isoformat()
-        })
-
-    except Exception as e:
-        return jsonify({'error': f'舆情分析失败：{str(e)}'}), 500
+    当前状态：功能已禁用，返回提示信息。
+    """
+    return jsonify({
+        'status': 'disabled',
+        'message': '舆情分析功能已禁用（符合数据求真原则）',
+        'reason': '缺少真实舆情数据源，不使用模拟数据',
+        'data_source_required': ['东方财富股吧', '雪球', '微博', '同花顺等'],
+        'note': '接入真实舆情API后可启用此功能',
+        'timestamp': datetime.now().isoformat()
+    }), 200
 
 
 def generate_mock_comments(stock_name):
