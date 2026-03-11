@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""舆情分析模块 - 分析个股的市场关注度、讨论热度、情绪倾向"""
+"""舆情分析模块 - 分析个股的市场关注度、讨论热度、情绪倾向
+符合养家心法第3条"数据求真原则"
+"""
 
 import sys
 import os
@@ -9,6 +11,9 @@ from typing import Dict, List, Tuple
 sys.path.insert(0, '/Users/likan/.openclaw/workspace/BettaFish-skill/scripts')
 
 from sentiment_analyzer import SentimentAnalyzer, SentimentResult
+
+# 导入舆情数据获取器
+from sentiment_data_fetcher import SentimentDataFetcher
 
 
 def calculate_sentiment_score(stock_code: str, stock_name: str,
@@ -47,7 +52,7 @@ def calculate_sentiment_score(stock_code: str, stock_name: str,
     # 使用BettaFish情感分析器进行分析
     if sentiment_analyzer:
         sentiment_score, sentiment_detail = _calculate_sentiment_trend_bettafish(
-            sentiment_analyzer, stock_name, limit_up_count, growth_coeff
+            sentiment_analyzer, stock_code, stock_name, limit_up_count, growth_coeff
         )
     else:
         sentiment_score = _calculate_sentiment_trend(limit_up_count, growth_coeff)
@@ -119,14 +124,18 @@ def _calculate_discussion_heat(stock_code: str, stock_name: str,
 
 
 def _calculate_sentiment_trend_bettafish(analyzer: SentimentAnalyzer,
+                                        stock_code: str,
                                         stock_name: str,
                                         limit_up_count: int,
                                         growth_coeff: float) -> Tuple[float, Dict]:
     """
     使用BettaFish情感分析器计算情绪倾向
 
+    从真实数据源（东方财富股吧等）获取舆情数据并分析
+
     Args:
         analyzer: BettaFish情感分析器
+        stock_code: 股票代码
         stock_name: 股票名称
         limit_up_count: 近10日涨停次数
         growth_coeff: 行业成长系数
@@ -134,20 +143,104 @@ def _calculate_sentiment_trend_bettafish(analyzer: SentimentAnalyzer,
     Returns:
         (情绪倾向分, 情感分析详情)
     """
-    # 数据求真原则：没有真实舆情数据源，不使用模拟数据
-    print(f"  ⚠️ 缺少真实舆情数据源（如东方财富股吧、雪球、微博等）")
-    print(f"  ⚠️ 舆情分析功能暂时禁用")
-    print(f"  ⚠️ 不使用模拟数据，保持数据真实性")
+    print(f"  正在获取 {stock_name}（{stock_code}）的真实舆情数据...")
 
-    return 0.0, {
-        'label': 'neutral',
-        'confidence': 0.0,
-        'avg_positive': 0.0,
-        'avg_negative': 0.0,
-        'text_count': 0,
-        'details': [],
-        'data_source_missing': True,
-        'reason': '缺少真实舆情数据源，不使用模拟数据'
+    # 使用舆情数据获取器获取真实数据
+    fetcher = SentimentDataFetcher()
+    sentiment_data = fetcher.fetch_from_eastmoney_guba(stock_code, stock_name, limit=30)
+
+    if not sentiment_data:
+        print(f"  ⚠️ 未能获取到真实舆情数据")
+        print(f"  ⚠️ 数据源可能不可用或股票代码不正确")
+        return 0.0, {
+            'label': 'neutral',
+            'confidence': 0.0,
+            'avg_positive': 0.0,
+            'avg_negative': 0.0,
+            'text_count': 0,
+            'details': [],
+            'data_source_missing': True,
+            'reason': '未能获取到真实舆情数据'
+        }
+
+    print(f"  ✅ 成功获取 {len(sentiment_data)} 条舆情数据")
+
+    # 提取文本内容进行情感分析
+    texts = [item['content'] for item in sentiment_data]
+
+    # 批量情感分析
+    sentiment_results = []
+    for text in texts:
+        try:
+            result = analyzer.analyze(text)
+            sentiment_results.append({
+                'label': result.label,
+                'confidence': result.confidence,
+                'positive_score': result.positive_score,
+                'negative_score': result.negative_score,
+                'neutral_score': result.neutral_score,
+                'fine_emotions': result.fine_emotions
+            })
+        except Exception as e:
+            print(f"  ⚠️ 情感分析失败: {e}")
+            continue
+
+    if not sentiment_results:
+        print(f"  ⚠️ 情感分析结果为空")
+        return 0.0, {
+            'label': 'neutral',
+            'confidence': 0.0,
+            'avg_positive': 0.0,
+            'avg_negative': 0.0,
+            'text_count': 0,
+            'details': [],
+            'data_source_missing': True,
+            'reason': '情感分析结果为空'
+        }
+
+    # 统计情感分布
+    from collections import Counter
+    label_counts = Counter([r['label'] for r in sentiment_results])
+    total = len(sentiment_results)
+
+    positive_count = label_counts.get('positive', 0)
+    negative_count = label_counts.get('negative', 0)
+    neutral_count = label_counts.get('neutral', 0)
+
+    # 计算平均分数
+    avg_positive = sum(r['positive_score'] for r in sentiment_results) / total
+    avg_negative = sum(r['negative_score'] for r in sentiment_results) / total
+    avg_confidence = sum(r['confidence'] for r in sentiment_results) / total
+
+    # 确定主要情感标签
+    if positive_count > negative_count:
+        label = 'positive'
+    elif negative_count > positive_count:
+        label = 'negative'
+    else:
+        label = 'neutral'
+
+    # 计算情绪倾向分（0-100）
+    # 正面情绪越多，分数越高
+    sentiment_score = (positive_count / total * 100) if total > 0 else 0
+
+    print(f"  情感统计: 正面{positive_count}条, 负面{negative_count}条, 中性{neutral_count}条")
+    print(f"  平均分数: 正面{avg_positive:.2f}, 负面{avg_negative:.2f}, 置信度{avg_confidence:.2f}")
+    print(f"  最终情绪倾向: {label} ({sentiment_score:.1f}分)")
+
+    # 返回详细分析结果
+    return sentiment_score, {
+        'label': label,
+        'confidence': avg_confidence,
+        'avg_positive': avg_positive,
+        'avg_negative': avg_negative,
+        'text_count': total,
+        'positive_count': positive_count,
+        'negative_count': negative_count,
+        'neutral_count': neutral_count,
+        'details': sentiment_results[:10],  # 返回前10条详细分析
+        'data_source': '东方财富股吧',
+        'data_source_missing': False
     }
 
 
