@@ -33,7 +33,7 @@ def read_top3_stocks(limit: int = 10) -> List[Dict]:
         股票列表
     """
     try:
-        df = pd.read_csv(TOP3_RESULT_FILE, encoding='utf-8')
+        df = pd.read_csv(TOP3_RESULT_FILE, encoding='utf-8-sig')
 
         if len(df) == 0:
             print(f"⚠️ TOP3结果文件为空")
@@ -95,69 +95,69 @@ def analyze_sentiment_for_stocks(stocks: List[Dict]) -> List[Dict]:
             # 提取文本内容进行情感分析
             texts = [item['content'] for item in sentiment_data]
 
-            # 使用MiroFish分析器进行情感分析
+            # 使用MiroFish分析器进行批量情感分析
             sentiment_results = sentiment_analyzer.analyze_batch(texts)
 
-            # 统计情感分布
-            from mirofish_sentiment import calculate_sentiment_distribution
-            sentiment_distribution = calculate_sentiment_distribution(sentiment_results)
+            # 计算情感分布
+            positive_count = sum(1 for r in sentiment_results if r['label'] == 'positive')
+            negative_count = sum(1 for r in sentiment_results if r['label'] == 'negative')
+            neutral_count = sum(1 for r in sentiment_results if r['label'] == 'neutral')
+            total = len(sentiment_results)
 
-            # 计算舆情热度分（基于情感分布）
-            positive_pct = sentiment_distribution['positive_pct']
-            negative_pct = sentiment_distribution['negative_pct']
-            total_mentions = sentiment_distribution['total']
-
-            # 舆情热度得分：正面情绪越多，分数越高
-            sentiment_heat_score = (positive_pct + total_mentions * 0.5) / 2
-            sentiment_heat_score = min(100, sentiment_heat_score)
-
-            # 舆情级别
-            if sentiment_heat_score >= 80:
-                sentiment_level = '🔥 爆热'
-            elif sentiment_heat_score >= 60:
-                sentiment_level = '📈 热门'
-            elif sentiment_heat_score >= 40:
-                sentiment_level = '😐 一般'
+            if total == 0:
+                positive_pct = 0.33
+                negative_pct = 0.33
+                neutral_pct = 0.34
             else:
-                sentiment_level = '❄️ 冷门'
+                positive_pct = positive_count / total
+                negative_pct = negative_count / total
+                neutral_pct = neutral_count / total
+
+            sentiment_distribution = {
+                'positive_count': positive_count,
+                'negative_count': negative_count,
+                'neutral_count': neutral_count,
+                'positive_pct': positive_pct,
+                'negative_pct': negative_pct,
+                'neutral_pct': neutral_pct,
+                'total': total
+            }
+
+            # 计算舆情热度分
+            # 正面情绪越多，分数越高
+            sentiment_heat_component = positive_pct
+
+            # 提及数量（30条为满分）
+            mention_count = min(1.0, len(sentiment_data) / 30.0)
 
             # 龙头关注分
             if limit_up_count >= 3:
-                dragon_score = 100
-                dragon_desc = '市场龙头，连续涨停'
+                dragon_score = 1.0
             elif limit_up_count >= 2:
-                dragon_score = 90
-                dragon_desc = '潜在龙头，多次涨停+高成长'
+                dragon_score = 0.9
             elif limit_up_count >= 1:
-                dragon_score = 70
-                dragon_desc = '板块内关注，有涨停+高成长'
-            elif growth_coeff >= 0.7:
-                dragon_score = 60
-                dragon_desc = '高成长行业，有潜力'
+                dragon_score = 0.7
             else:
-                dragon_score = 30
-                dragon_desc = '跟风股，无涨停'
+                dragon_score = 0.3
 
-            # 计算讨论热度分
-            if limit_up_count == 0:
-                discussion_heat = 30
-                discussion_desc = '近10日无涨停，关注度一般'
-            elif limit_up_count == 1:
-                discussion_heat = 60
-                discussion_desc = '近10日涨停1次，有一定关注度'
-            elif limit_up_count == 2:
-                discussion_heat = 80
-                discussion_desc = '近10日涨停2次，市场关注度极高'
-            else:  # >=3
-                discussion_heat = 100
-                discussion_desc = f'近10日涨停{limit_up_count}次，市场关注度极高'
-
-            # 最终舆情热度得分
+            # 综合舆情热度得分
+            # 情绪倾向 40% + 提及数量 30% + 龙头关注 30%
             final_sentiment_score = (
-                sentiment_heat_score * 0.4 +  # 情绪倾向（40%）
-                discussion_heat * 0.3 +        # 讨论热度（30%）
-                dragon_score * 0.3                # 龙头关注（30%）
-            )
+                sentiment_heat_component * 0.4 +
+                mention_count * 0.3 +
+                dragon_score * 0.3
+            ) * 100
+            final_sentiment_score = min(100, final_sentiment_score)
+
+            # 舆情级别
+            if final_sentiment_score >= 80:
+                sentiment_level = '🔥 超热'
+            elif final_sentiment_score >= 60:
+                sentiment_level = '📈 热门'
+            elif final_sentiment_score >= 40:
+                sentiment_level = '😐 一般'
+            else:
+                sentiment_level = '❄️ 冷门'
 
             # 合并结果
             stock_with_sentiment = stock.copy()
@@ -165,10 +165,6 @@ def analyze_sentiment_for_stocks(stocks: List[Dict]) -> List[Dict]:
             stock_with_sentiment['sentiment_level'] = sentiment_level
             stock_with_sentiment['sentiment_detail'] = json.dumps({
                 'emotion_distribution': sentiment_distribution,
-                'discussion_heat': discussion_heat,
-                'discussion_desc': discussion_desc,
-                'dragon_score': dragon_score,
-                'dragon_desc': dragon_desc,
                 'data_source': '东方财富股吧',
                 'data_count': len(sentiment_data)
             }, ensure_ascii=False, indent=2)
@@ -212,7 +208,7 @@ def rerank_by_sentiment(stocks: List[Dict]) -> List[Dict]:
     print(f"{'='*80}")
 
     for i, stock in enumerate(sorted_stocks, 1):
-        print(f"{i}. {stock['stock_name']}（{stock['stock_code']}） - "
+        print(f"{i}. {stock['name']}（{stock['ts_code']}） - "
               f"舆情热度: {stock['sentiment_heat_score']:.1f}/100")
 
     return sorted_stocks
@@ -231,7 +227,7 @@ def save_results(stocks: List[Dict], output_file: str = SENTIMENT_RESULT_FILE):
 
         # 选择要保存的列
         columns = [
-            'stock_code', 'stock_name', 'price', 'pct_chg', 'total_mv',
+            'ts_code', 'name', 'price', 'pct_chg', 'total_mv',
             'win_rate', 'overall_score', 'long_term_score', 'mid_term_score', 'short_term_score',
             'sentiment_heat_score', 'sentiment_level', 'limit_up_count', 'growth_coeff',
             'buy_point_type', 'sentiment_detail', 'mirofish_enabled'
@@ -296,7 +292,7 @@ def main():
     print(f"{'='*80}")
 
     for i, stock in enumerate(reranked_stocks[:3], 1):
-        print(f"\n第{i}名: {stock['stock_name']}（{stock['stock_code']}）")
+        print(f"\n第{i}名: {stock['name']}（{stock['ts_code']}）")
         print(f"  股价: {stock['price']:.2f} | 涨跌幅: {stock['pct_chg']:.2f}%")
         print(f"  舆情热度: {stock['sentiment_heat_score']:.1f}/100")
         print(f"  舆情级别: {stock['sentiment_level']}")
