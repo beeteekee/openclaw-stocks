@@ -11,10 +11,10 @@ sleep 2
 
 # 启动新服务
 echo "启动股票分析服务..."
-nohup python3 stock_service.py >> stock_service.log 2>&1 &
+nohup python3 -u stock_service.py >> stock_service.log 2>&1 &
 
 # 等待服务启动
-sleep 3
+sleep 5
 
 # 检查服务状态
 if lsof -i:5000 2>/dev/null | grep -q LISTEN; then
@@ -22,6 +22,9 @@ if lsof -i:5000 2>/dev/null | grep -q LISTEN; then
     echo "  访问地址：http://127.0.0.1:5000"
     echo "  健康检查：http://127.0.0.1:5000/api/health"
     echo "  日志文件：stock_service.log"
+    echo ""
+    echo "服务状态："
+    curl -s http://127.0.0.1:5000/api/health
 else
     echo "✗ 服务启动失败，请检查日志："
     tail -30 stock_service.log
