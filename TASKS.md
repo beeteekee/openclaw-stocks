@@ -83,13 +83,83 @@ LLM请求频繁超时，导致任务失败。
 
 ---
 
+### 任务4：BettaFish迁移到MrioFish
+**分配给**：后端开发（stock-analysis）
+**优先级**：高
+**截止时间**：3月13日（后天）
+
+#### 任务描述
+删除现有的BettaFish相关代码，从GitHub下载MrioFish替代，重新开发舆情分析功能。
+
+#### 需求背景
+- BettaFish存在数据获取问题
+- MrioFish可能是更优的舆情分析解决方案
+- 需要保持"数据求真"原则，使用真实数据源
+
+#### 实施步骤
+1. **备份现有代码**：
+   - 备份BettaFish-skill目录
+   - 备份sentiment_analysis.py
+   - 备份sentiment_data_fetcher.py
+
+2. **删除BettaFish相关文件**：
+   ```bash
+   rm -rf BettaFish-skill/
+   rm sentiment_analysis.py
+   rm sentiment_data_fetcher.py
+   ```
+
+3. **从GitHub下载MrioFish**：
+   - 需要PM提供MrioFish的GitHub仓库地址
+   - 克隆到workspace
+   - 查看README和文档
+
+4. **重新实现舆情分析功能**：
+   - 基于MrioFish的API接口
+   - 保持daily_sentiment_analysis.py的逻辑
+   - 集成MrioFish的情感分析能力
+   - 确保真实数据源（东方财富股吧等）
+
+5. **测试新实现**：
+   - 对比BettaFish和MrioFish的分析结果
+   - 验证数据获取成功率
+   - 确认情感分析准确性
+
+#### 质量检查标准
+- [ ] BettaFish相关代码已完全删除
+- [ ] MrioFish成功下载和集成
+- [ ] daily_sentiment_analysis.py功能正常
+- [ ] 舆情数据获取成功率>90%
+- [ ] 情感分析结果合理
+- [ ] 所有修改已提交到Git
+
+#### 验收标准
+- 执行daily_sentiment_analysis.py脚本
+- 使用真实股票代码测试（至少3只股票）
+- 比较新旧实现的输出质量
+- 确认无BettaFish残留代码
+
+#### 风险和注意事项
+1. **MrioFish仓库地址**：需要PM提供准确的GitHub仓库地址
+2. **API接口差异**：MrioFish的API可能与BettaFish不同，需要适配
+3. **数据源兼容性**：确保MrioFish支持东方财富股吧等数据源
+4. **功能对等性**：确保迁移后功能不降级
+
+#### 待确认事项
+- [ ] MrioFish的GitHub仓库地址（PM提供）
+- [ ] MrioFish的API文档
+- [ ] 是否需要额外的依赖或配置
+
+---
+
 ## 任务状态跟踪
 
 | 任务ID | 任务名称 | 分配给 | 优先级 | 状态 | 完成度 |
 |--------|---------|--------|--------|------|--------|
-| T001 | 队列处理失败修复 | stock-analysis | 高 | 🔄 已分配 | 0% |
-| T002 | Gateway超时优化 | stock-analysis | 高 | 🔄 已分配 | 50% |
+| T001 | 队列处理失败修复 | stock-analysis | 高 | 🔄 进行中 | 5% |
+| T002 | Gateway超时优化 | stock-analysis | 高 | 🔄 进行中 | 50% |
 | T003 | 舆情分析功能测试 | 待分配 | 中 | ⏳ 待开始 | 0% |
+| T004 | BettaFish迁移到MrioFish | stock-analysis | 高 | ⏳ 待开始 | 0% |
 
 ## 任务分配日志
 
@@ -101,6 +171,22 @@ LLM请求频繁超时，导致任务失败。
   1. stock-analysis agent下次启动时自动加载任务
   2. PM在下次对话时直接提醒agent
   3. 考虑手动重启stock-analysis agent
+
+### 2026-03-11 15:59
+- **PM操作**：通过对话直接分配任务
+- **结果**：✅ 任务已成功接收
+- **当前状态**：
+  - T001：已接收，准备开始执行（5%）
+  - T002：准备工作已完成（50%），等待执行
+
+### 2026-03-11 16:07
+- **PM操作**：创建T004任务（BettaFish迁移到MrioFish）
+- **结果**：⚠️ 分配超时（status: timeout）
+- **原因分析**：stock-analysis agent队列处理问题持续存在
+- **待确认事项**：
+  1. **MrioFish的GitHub仓库地址**（需要PM提供）
+  2. MrioFish的API文档
+  3. 是否需要额外的依赖或配置
 
 ---
 
