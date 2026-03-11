@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """养家心法选股服务 - 提供股票分析API"""
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 import tushare as ts
 import pandas as pd
@@ -486,7 +486,8 @@ def identify_dragon(stock_code, industry):
 @app.route('/')
 def index():
     """主页 - 返回前端页面"""
-    return app.send_static_file('stock-analysis.html')
+    html_file = os.path.join(os.path.dirname(__file__), 'stock-analysis.html')
+    return send_file(html_file)
 
 def get_market_emotion_data():
     """
@@ -2436,4 +2437,4 @@ if __name__ == '__main__':
     print("  - GET /api/analyze?code=股票代码")
     print("  - GET /api/health")
     print("="*60)
-    app.run(host='0.0.0.0', port=FLASK_PORT, debug=True)
+    app.run(host='0.0.0.0', port=FLASK_PORT, debug=False)
