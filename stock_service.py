@@ -2425,4 +2425,5 @@ if __name__ == '__main__':
     print("  - GET /api/analyze?code=股票代码")
     print("  - GET /api/health")
     print("="*60)
-    app.run(host='0.0.0.0', port=FLASK_PORT, debug=False)
+    # 启用threaded以支持并发请求处理，避免请求队列阻塞
+    app.run(host='0.0.0.0', port=FLASK_PORT, debug=False, threaded=True)
