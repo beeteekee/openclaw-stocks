@@ -73,7 +73,7 @@ LLM请求频繁超时，导致任务失败。
 | T001 | 队列处理失败修复 | stock-analysis | 高 | 🔄 进行中 | 5% |
 | T002 | Gateway超时优化 | stock-analysis | 高 | 🔄 进行中 | 50% |
 | T003 | 舆情分析功能测试 | 待分配 | 中 | ⏳ 待开始 | 0% |
-| T004 | 优化BettaFish舆情分析 | stock-analysis | 高 | 🔄 待开始 | 0% |
+| T004 | 优化BettaFish舆情分析 | stock-analysis | 高 | ✅ 完成 | 100% |
 
 ## 任务分配日志
 
