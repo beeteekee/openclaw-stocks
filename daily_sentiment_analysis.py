@@ -70,8 +70,8 @@ def analyze_sentiment_for_stocks(stocks: List[Dict]) -> List[Dict]:
     sentiment_analyzer = MiroFishSentimentAnalyzer()
 
     for i, stock in enumerate(stocks, 1):
-        stock_code = stock.get('stock_code', '')
-        stock_name = stock.get('stock_name', '')
+        stock_code = stock.get('ts_code', '')
+        stock_name = stock.get('name', '')
         limit_up_count = stock.get('limit_up_count', 0)
         growth_coeff = stock.get('growth_coeff', 0.3)
 
