@@ -1574,11 +1574,13 @@ def analyze_stock():
         current_emotion, emotion_score = get_market_emotion()
 
         # V10.0: 舆情热度分析
-        from sentiment_analysis import calculate_sentiment_score
-
-        sentiment_result = calculate_sentiment_score(stock_code, stock_info['name'],
-                                                       limit_up_count, growth_coeff, concepts)
-        sentiment_heat_score = sentiment_result['sentiment_heat_score']
+        # 舆情分析仅用于精选股票，不集成到主分析流程中
+        # 如需舆情分析，请使用专门的API端点 /api/sentiment
+        sentiment_heat_score = 0.0  # 默认值，不影响综合评分
+        sentiment_result = {
+            'enabled': False,
+            'reason': '舆情分析仅用于精选股票，不集成到主分析流程中'
+        }
 
         # V10.2: 龙头识别优化
         from dragon_leader_identifier import DragonLeaderIdentifier
@@ -1606,8 +1608,9 @@ def analyze_stock():
                 print("⚠️ 市场情绪周期无法判断，使用中性情绪评分（50分）")
                 current_emotion = 'neutral'  # 设置为中性情绪
 
-        # 计算短期评分（V10.0：技术面70% + 舆情热度20% + 题材热度10% - 市值扣分）
-        short_term_score = (tech_score * 0.7) + (sentiment_heat_score * 0.2) + (theme_heat_index * 0.1) - market_cap_penalty
+        # 计算短期评分（V10.2.1：技术面80% + 题材热度20% - 市值扣分）
+        # 舆情分析已从主流程中移除，仅用于精选股票分析
+        short_term_score = (tech_score * 0.8) + (theme_heat_index * 0.2) - market_cap_penalty
 
         # 确保评分在合理范围内
         short_term_score = max(0, min(100, short_term_score))
