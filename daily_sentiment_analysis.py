@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""每日精选股票舆情分析 - 对每日精选10只股票进行舆情分析并按热度重新排序"""
+"""每日精选股票舆情分析 - 对每日精选10只股票进行舆情分析并按热度重新排序
+使用MiroFish架构"""
 
 import os
 import sys
@@ -13,7 +14,8 @@ warnings.filterwarnings('ignore')
 # 导入相关模块
 sys.path.insert(0, '/Users/likan/.openclaw/workspace')
 
-from sentiment_analysis import calculate_sentiment_score
+from mirofish_sentiment import MiroFishSentimentAnalyzer
+from mirofish_data_fetcher import fetch_sentiment_data
 
 # 读取TOP3结果文件
 TOP3_RESULT_FILE = '/Users/likan/.openclaw/workspace/top3_today_result.csv'
@@ -54,7 +56,7 @@ def read_top3_stocks(limit: int = 10) -> List[Dict]:
 
 def analyze_sentiment_for_stocks(stocks: List[Dict]) -> List[Dict]:
     """
-    对股票列表进行舆情分析
+    对股票列表进行舆情分析（使用MiroFish架构）
 
     Args:
         stocks: 股票列表
@@ -63,6 +65,9 @@ def analyze_sentiment_for_stocks(stocks: List[Dict]) -> List[Dict]:
         包含舆情分析结果的股票列表
     """
     results = []
+
+    # 初始化MiroFish分析器
+    sentiment_analyzer = MiroFishSentimentAnalyzer()
 
     for i, stock in enumerate(stocks, 1):
         stock_code = stock.get('stock_code', '')
@@ -73,35 +78,117 @@ def analyze_sentiment_for_stocks(stocks: List[Dict]) -> List[Dict]:
         print(f"\n[{i}/{len(stocks)}] 分析 {stock_name}（{stock_code}）的舆情...")
 
         try:
-            # 计算舆情热度分
-            sentiment_result = calculate_sentiment_score(
-                stock_code=stock_code,
-                stock_name=stock_name,
-                limit_up_count=limit_up_count,
-                growth_coeff=growth_coeff,
-                concepts=[]
+            # 获取真实舆情数据
+            sentiment_data = fetch_sentiment_data(stock_code, stock_name, limit=30)
+
+            if not sentiment_data:
+                print(f"   ⚠️ 未能获取到舆情数据")
+                # 设置默认值
+                stock_with_sentiment = stock.copy()
+                stock_with_sentiment['sentiment_heat_score'] = 0.0
+                stock_with_sentiment['sentiment_level'] = '未知'
+                stock_with_sentiment['sentiment_detail'] = json.dumps({'error': '未能获取舆情数据'}, ensure_ascii=False)
+                stock_with_sentiment['mirofish_enabled'] = False
+                results.append(stock_with_sentiment)
+                continue
+
+            # 提取文本内容进行情感分析
+            texts = [item['content'] for item in sentiment_data]
+
+            # 使用MiroFish分析器进行情感分析
+            sentiment_results = sentiment_analyzer.analyze_batch(texts)
+
+            # 统计情感分布
+            from mirofish_sentiment import calculate_sentiment_distribution
+            sentiment_distribution = calculate_sentiment_distribution(sentiment_results)
+
+            # 计算舆情热度分（基于情感分布）
+            positive_pct = sentiment_distribution['positive_pct']
+            negative_pct = sentiment_distribution['negative_pct']
+            total_mentions = sentiment_distribution['total']
+
+            # 舆情热度得分：正面情绪越多，分数越高
+            sentiment_heat_score = (positive_pct + total_mentions * 0.5) / 2
+            sentiment_heat_score = min(100, sentiment_heat_score)
+
+            # 舆情级别
+            if sentiment_heat_score >= 80:
+                sentiment_level = '🔥 爆热'
+            elif sentiment_heat_score >= 60:
+                sentiment_level = '📈 热门'
+            elif sentiment_heat_score >= 40:
+                sentiment_level = '😐 一般'
+            else:
+                sentiment_level = '❄️ 冷门'
+
+            # 龙头关注分
+            if limit_up_count >= 3:
+                dragon_score = 100
+                dragon_desc = '市场龙头，连续涨停'
+            elif limit_up_count >= 2:
+                dragon_score = 90
+                dragon_desc = '潜在龙头，多次涨停+高成长'
+            elif limit_up_count >= 1:
+                dragon_score = 70
+                dragon_desc = '板块内关注，有涨停+高成长'
+            elif growth_coeff >= 0.7:
+                dragon_score = 60
+                dragon_desc = '高成长行业，有潜力'
+            else:
+                dragon_score = 30
+                dragon_desc = '跟风股，无涨停'
+
+            # 计算讨论热度分
+            if limit_up_count == 0:
+                discussion_heat = 30
+                discussion_desc = '近10日无涨停，关注度一般'
+            elif limit_up_count == 1:
+                discussion_heat = 60
+                discussion_desc = '近10日涨停1次，有一定关注度'
+            elif limit_up_count == 2:
+                discussion_heat = 80
+                discussion_desc = '近10日涨停2次，市场关注度极高'
+            else:  # >=3
+                discussion_heat = 100
+                discussion_desc = f'近10日涨停{limit_up_count}次，市场关注度极高'
+
+            # 最终舆情热度得分
+            final_sentiment_score = (
+                sentiment_heat_score * 0.4 +  # 情绪倾向（40%）
+                discussion_heat * 0.3 +        # 讨论热度（30%）
+                dragon_score * 0.3                # 龙头关注（30%）
             )
 
             # 合并结果
             stock_with_sentiment = stock.copy()
-            stock_with_sentiment['sentiment_heat_score'] = sentiment_result['sentiment_heat_score']
-            stock_with_sentiment['sentiment_level'] = sentiment_result['sentiment_level']
-            stock_with_sentiment['sentiment_detail'] = json.dumps(sentiment_result['sentiment_detail'], ensure_ascii=False)
-            stock_with_sentiment['bettafish_enabled'] = sentiment_result['bettafish_enabled']
+            stock_with_sentiment['sentiment_heat_score'] = final_sentiment_score
+            stock_with_sentiment['sentiment_level'] = sentiment_level
+            stock_with_sentiment['sentiment_detail'] = json.dumps({
+                'emotion_distribution': sentiment_distribution,
+                'discussion_heat': discussion_heat,
+                'discussion_desc': discussion_desc,
+                'dragon_score': dragon_score,
+                'dragon_desc': dragon_desc,
+                'data_source': '东方财富股吧',
+                'data_count': len(sentiment_data)
+            }, ensure_ascii=False, indent=2)
+            stock_with_sentiment['mirofish_enabled'] = True
 
-            print(f"   舆情热度: {sentiment_result['sentiment_heat_score']:.1f}/100")
-            print(f"   舆情级别: {sentiment_result['sentiment_level']}")
+            print(f"   舆情热度: {final_sentiment_score:.1f}/100")
+            print(f"   舆情级别: {sentiment_level}")
 
             results.append(stock_with_sentiment)
 
         except Exception as e:
             print(f"   ⚠️ 舆情分析失败: {e}")
+            import traceback
+            traceback.print_exc()
             # 失败时设置默认值
             stock_with_sentiment = stock.copy()
             stock_with_sentiment['sentiment_heat_score'] = 0.0
             stock_with_sentiment['sentiment_level'] = '未知'
             stock_with_sentiment['sentiment_detail'] = json.dumps({'error': str(e)}, ensure_ascii=False)
-            stock_with_sentiment['bettafish_enabled'] = False
+            stock_with_sentiment['mirofish_enabled'] = False
             results.append(stock_with_sentiment)
 
     return results
@@ -147,7 +234,7 @@ def save_results(stocks: List[Dict], output_file: str = SENTIMENT_RESULT_FILE):
             'stock_code', 'stock_name', 'price', 'pct_chg', 'total_mv',
             'win_rate', 'overall_score', 'long_term_score', 'mid_term_score', 'short_term_score',
             'sentiment_heat_score', 'sentiment_level', 'limit_up_count', 'growth_coeff',
-            'buy_point_type', 'sentiment_detail', 'bettafish_enabled'
+            'buy_point_type', 'sentiment_detail', 'mirofish_enabled'
         ]
 
         # 只保留存在的列
