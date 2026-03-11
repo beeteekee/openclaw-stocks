@@ -12,7 +12,8 @@
 
 #### 初步诊断
 - 日志显示：`embedded run agent end: runId=xxx isError=true error=LLM request timed out.`
-- 问题可能是：Gateway配置、LLM超时设置、内存溢出
+- Gateway日志显示飞书连接失败（DNS解析错误）
+- MEMORY.md过大导致上下文溢出
 
 #### 实施步骤
 1. 检查Gateway配置文件（~/.openclaw/openclaw.json）
@@ -42,7 +43,7 @@
 LLM请求频繁超时，导致任务失败。
 
 #### 初步诊断
-- MEMEORY.md过大（52555字节）导致上下文溢出
+- MEMORY.md过大（52555字节）导致上下文溢出
 - 模型响应慢
 - 网络问题
 
@@ -50,7 +51,7 @@ LLM请求频繁超时，导致任务失败。
 1. 精简MEMORY.md（已完成：1417字节）
 2. 检查GLM-4.7模型响应时间
 3. 如果持续超时，考虑切换到Kimi模型
-4. 增加重试机制
+4. 增加重试机制（如果需要）
 
 #### 质量检查标准
 - [ ] LLM请求成功率>95%
@@ -65,93 +66,6 @@ LLM请求频繁超时，导致任务失败。
 
 ---
 
-## 待分配任务
-
-### 任务3：舆情分析功能测试
-**预计分配**：后端开发（stock-analysis）
-**优先级**：中
-**预计开始**：3月13日
-
-#### 任务内容
-测试daily_sentiment_analysis.py脚本，确保舆情分析功能正常。
-
-#### 测试计划
-1. 使用真实股票代码测试（如002594.SZ比亚迪）
-2. 验证数据获取成功率
-3. 检查情感分析准确性
-4. 测试排序功能
-
----
-
-### 任务4：BettaFish迁移到MrioFish
-**分配给**：后端开发（stock-analysis）
-**优先级**：高
-**截止时间**：3月13日（后天）
-
-#### 任务描述
-删除现有的BettaFish相关代码，从GitHub下载MrioFish替代，重新开发舆情分析功能。
-
-#### 需求背景
-- BettaFish存在数据获取问题
-- MrioFish可能是更优的舆情分析解决方案
-- 需要保持"数据求真"原则，使用真实数据源
-
-#### 实施步骤
-1. **备份现有代码**：
-   - 备份BettaFish-skill目录
-   - 备份sentiment_analysis.py
-   - 备份sentiment_data_fetcher.py
-
-2. **删除BettaFish相关文件**：
-   ```bash
-   rm -rf BettaFish-skill/
-   rm sentiment_analysis.py
-   rm sentiment_data_fetcher.py
-   ```
-
-3. **从GitHub下载MrioFish**：
-   - 需要PM提供MrioFish的GitHub仓库地址
-   - 克隆到workspace
-   - 查看README和文档
-
-4. **重新实现舆情分析功能**：
-   - 基于MrioFish的API接口
-   - 保持daily_sentiment_analysis.py的逻辑
-   - 集成MrioFish的情感分析能力
-   - 确保真实数据源（东方财富股吧等）
-
-5. **测试新实现**：
-   - 对比BettaFish和MrioFish的分析结果
-   - 验证数据获取成功率
-   - 确认情感分析准确性
-
-#### 质量检查标准
-- [ ] BettaFish相关代码已完全删除
-- [ ] MrioFish成功下载和集成
-- [ ] daily_sentiment_analysis.py功能正常
-- [ ] 舆情数据获取成功率>90%
-- [ ] 情感分析结果合理
-- [ ] 所有修改已提交到Git
-
-#### 验收标准
-- 执行daily_sentiment_analysis.py脚本
-- 使用真实股票代码测试（至少3只股票）
-- 比较新旧实现的输出质量
-- 确认无BettaFish残留代码
-
-#### 风险和注意事项
-1. **MrioFish仓库地址**：需要PM提供准确的GitHub仓库地址
-2. **API接口差异**：MrioFish的API可能与BettaFish不同，需要适配
-3. **数据源兼容性**：确保MrioFish支持东方财富股吧等数据源
-4. **功能对等性**：确保迁移后功能不降级
-
-#### 待确认事项
-- [ ] MrioFish的GitHub仓库地址（PM提供）
-- [ ] MrioFish的API文档
-- [ ] 是否需要额外的依赖或配置
-
----
-
 ## 任务状态跟踪
 
 | 任务ID | 任务名称 | 分配给 | 优先级 | 状态 | 完成度 |
@@ -159,7 +73,7 @@ LLM请求频繁超时，导致任务失败。
 | T001 | 队列处理失败修复 | stock-analysis | 高 | 🔄 进行中 | 5% |
 | T002 | Gateway超时优化 | stock-analysis | 高 | 🔄 进行中 | 50% |
 | T003 | 舆情分析功能测试 | 待分配 | 中 | ⏳ 待开始 | 0% |
-| T004 | BettaFish迁移到MrioFish | stock-analysis | 高 | ⏳ 待开始 | 0% |
+| T004 | 优化BettaFish舆情分析 | stock-analysis | 高 | 🔄 待开始 | 0% |
 
 ## 任务分配日志
 
@@ -179,14 +93,89 @@ LLM请求频繁超时，导致任务失败。
   - T001：已接收，准备开始执行（5%）
   - T002：准备工作已完成（50%），等待执行
 
-### 2026-03-11 16:07
-- **PM操作**：创建T004任务（BettaFish迁移到MrioFish）
-- **结果**：⚠️ 分配超时（status: timeout）
-- **原因分析**：stock-analysis agent队列处理问题持续存在
-- **待确认事项**：
-  1. **MrioFish的GitHub仓库地址**（需要PM提供）
-  2. MrioFish的API文档
-  3. 是否需要额外的依赖或配置
+### 2026-03-11 16:20
+- **后端报告**：MiroFish不是舆情分析工具，需要重新决策
+- **PM决策**：选择方案A，继续使用并优化BettaFish
+- **任务更新**：T004从"迁移到MiroFish"改为"优化BettaFish"
+
+---
+
+## 待分配任务
+
+### 任务3：舆情分析功能测试
+**预计分配**：后端开发（stock-analysis）
+**优先级**：中
+**预计开始**：3月12日
+
+#### 任务内容
+测试daily_sentiment_analysis.py脚本，确保舆情分析功能正常。
+
+#### 测试计划
+1. 使用真实股票代码测试（如002594.SZ比亚迪）
+2. 验证数据获取成功率
+3. 检查情感分析准确性
+4. 测试排序功能
+
+---
+
+### 任务4：优化BettaFish舆情分析功能
+**分配给**：后端开发（stock-analysis）
+**优先级**：高
+**截止时间**：3月12日（明天）
+
+#### 任务描述
+基于已修复的BettaFish数据获取功能，优化舆情分析能力，确保数据获取成功率和分析准确性。
+
+#### 需求背景
+- MiroFish是复杂的多智能体仿真系统，不适合简单舆情分析
+- BettaFish已修复JSON解析问题，测试显示可以正常获取数据
+- 需要优化数据获取量和情感分析准确性
+
+#### 实施步骤
+1. **恢复BettaFish代码**（5分钟）
+   ```bash
+   cd /Users/likan/.openclaw/workspace
+   cp BettaFish-skill.backup/* BettaFish-skill/
+   cp sentiment_analysis.py.backup sentiment_analysis.py
+   cp sentiment_data_fetcher.py.backup sentiment_data_fetcher.py
+   ```
+
+2. **优化数据获取策略**（预计1-2小时）
+   - 增加获取数量（调整limit参数）
+   - 添加数据源切换机制（备用数据源）
+   - 优化请求重试逻辑
+   - 添加错误处理和降级方案
+
+3. **优化情感分析算法**（预计1-2小时）
+   - 调整情感权重配置
+   - 优化情感词典
+   - 添加细分情绪识别
+   - 改进情绪聚合算法
+
+4. **增加测试用例**（预计30分钟）
+   - 测试不同股票代码（高热度、中热度、低热度）
+   - 验证数据获取成功率
+   - 检查情感分析结果合理性
+
+5. **集成到daily_sentiment_analysis.py**（预计30分钟）
+   - 确保与现有脚本兼容
+   - 添加详细日志输出
+   - 优化性能和稳定性
+
+#### 质量检查标准
+- [ ] BettaFish代码已恢复
+- [ ] 舆情数据获取成功率>90%
+- [ ] 每次获取至少20条数据
+- [ ] 情感分析结果合理且一致
+- [ ] daily_sentiment_analysis.py正常工作
+- [ ] 所有修改已提交到Git
+
+#### 验收标准
+- 执行daily_sentiment_analysis.py脚本
+- 使用真实股票代码测试（至少5只股票）
+- 数据获取成功率>90%
+- 情感分析结果合理
+- 脚本运行稳定，无异常退出
 
 ---
 
