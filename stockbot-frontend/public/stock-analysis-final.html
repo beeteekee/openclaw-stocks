@@ -215,7 +215,7 @@
         }
 
         /* 移动端优化 */
-        @media (max-width: 768px) {
+        @media (max-width: 480px) {
             body {
                 padding: 10px;
             }
@@ -259,26 +259,33 @@
             }
 
             /* 统计信息 - 移动端纵向堆叠 */
+            .stats-container {
+                padding: 8px;
+            }
+
             .stats-items {
                 flex-direction: column;
                 gap: 8px;
             }
 
             .stats-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 12px 16px;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                text-align: left !important;
+                padding: 12px 16px !important;
                 min-height: 48px;
             }
 
             .stats-label {
-                font-size: 13px;
-                margin-bottom: 0;
+                font-size: 13px !important;
+                margin-bottom: 0 !important;
+                flex: 0 0 auto;
             }
 
             .stats-value {
-                font-size: 20px;
+                font-size: 20px !important;
+                flex: 0 0 auto;
             }
         }
     </style>
