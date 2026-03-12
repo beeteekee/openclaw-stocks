@@ -49,12 +49,12 @@
         }
 
         input[type="text"]:focus {
-            border-color: #007bff;
+            border-color: #2ecc71;
         }
 
         button {
             padding: 12px 24px;
-            background: #007bff;
+            background: #2ecc71;
             color: white;
             border: none;
             border-radius: 8px;
@@ -65,11 +65,11 @@
         }
 
         button:hover {
-            background: #0056b3;
+            background: #27ae60;
         }
 
         button:disabled {
-            background: #ccc;
+            background: #95a5a6;
             cursor: not-allowed;
         }
 
@@ -79,7 +79,7 @@
             gap: 8px;
             margin-bottom: 20px;
             padding: 10px;
-            background: #f8f9fa;
+            background: #ecf0f1;
             border-radius: 6px;
             font-size: 14px;
         }
@@ -91,24 +91,24 @@
         }
 
         .status-dot.connected {
-            background: #28a745;
+            background: #2ecc71;
         }
 
         .status-dot.disconnected {
-            background: #dc3545;
+            background: #e74c3c;
         }
 
         .status-dot.busy {
-            background: #ffc107;
+            background: #f39c12;
         }
 
         .status-dot.error {
-            background: #dc3545;
+            background: #e74c3c;
         }
 
         .result-section {
             min-height: 200px;
-            background: #f8f9fa;
+            background: #ecf0f1;
             border-radius: 8px;
             padding: 15px;
             white-space: pre-wrap;
@@ -117,14 +117,14 @@
             word-break: break-word;
             font-size: 14px;
             line-height: 1.6;
-            color: #333;
+            color: #2c3e50;
             overflow-x: auto;
             max-width: 100%;
         }
 
         .error-message {
-            color: #dc3545;
-            background: #f8d7da;
+            color: #e74c3c;
+            background: #fadbd8;
             padding: 10px;
             border-radius: 6px;
             margin-top: 10px;
@@ -132,8 +132,8 @@
         }
 
         .debug-section {
-            background: #fff3cd;
-            border-left: 3px solid #ffc107;
+            background: #fef5e7;
+            border-left: 3px solid #f39c12;
             padding: 10px;
             margin-top: 20px;
             border-radius: 4px;
@@ -151,7 +151,7 @@
             color: #2c3e50;
             margin-bottom: 15px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #007bff;
+            border-bottom: 2px solid #2ecc71;
         }
 
         .top3-container {
@@ -161,7 +161,7 @@
         }
 
         .top3-item {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
             color: white;
             padding: 16px;
             border-radius: 8px;
@@ -226,15 +226,15 @@
         }
 
         .top3-metric-value.high {
-            color: #4ade80;
+            color: #2ecc71;
         }
 
         .top3-metric-value.medium {
-            color: #fbbf24;
+            color: #f39c12;
         }
 
         .top3-metric-value.low {
-            color: #f87171;
+            color: #e74c3c;
         }
 
         /* 统计信息卡片 - 桌面端横向排列 */
@@ -262,7 +262,7 @@
         }
 
         .stats-label {
-            color: #3498db;
+            color: #95a5a6;
             font-size: 12px;
             margin-bottom: 4px;
         }
@@ -290,7 +290,7 @@
         }
 
         .example:hover {
-            background: #007bff;
+            background: #2ecc71;
             color: white;
         }
 
@@ -299,7 +299,7 @@
             width: 16px;
             height: 16px;
             border: 2px solid #ddd;
-            border-top-color: #007bff;
+            border-top-color: #2ecc71;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-right: 8px;
@@ -440,9 +440,9 @@
             <p style="color: #999; text-align: center;">请在上方输入股票进行分析</p>
         </div>
 
-        <!-- 股票精选TOP3 -->
+        <!-- 股票精选TOP8 -->
         <div class="top3-section">
-            <h3 class="section-title">📈 今日精选TOP3</h3>
+            <h3 class="section-title">📈 今日精选TOP8</h3>
             <div class="top3-container" id="top3Container">
                 <div class="loading">加载中...</div>
             </div>
@@ -454,10 +454,6 @@
                 <div class="stats-item">
                     <div class="stats-label">日期</div>
                     <div class="stats-value" id="statsDate">加载中...</div>
-                </div>
-                <div class="stats-item">
-                    <div class="stats-label">查询次数</div>
-                    <div class="stats-value" id="statsQueryCount">0</div>
                 </div>
                 <div class="stats-item">
                     <div class="stats-label">股票数量</div>
@@ -482,7 +478,6 @@
 
         // 统计信息元素
         const statsDate = document.getElementById('statsDate');
-        const statsQueryCount = document.getElementById('statsQueryCount');
         const statsStockCount = document.getElementById('statsStockCount');
 
         // API 配置
@@ -496,12 +491,15 @@
         // 加载统计数据
         async function loadStats() {
             try {
-                const response = await fetch('/api/stats/previous');
+                const response = await fetch('/api/stats');
                 if (response.ok) {
-                    const stats = await response.json();
-                    statsDate.textContent = stats.date;
-                    statsQueryCount.textContent = stats.queryCount;
-                    statsStockCount.textContent = stats.stockCount;
+                    const data = await response.json();
+                    const totalQueryCount = data.total_count || 0;
+                    const stockCount = Object.keys(data.stock_queries || {}).length;
+                    const today = new Date().toISOString().split('T')[0];
+
+                    statsDate.textContent = today;
+                    statsStockCount.textContent = stockCount;
                 } else {
                     console.error('获取统计数据失败');
                 }
@@ -516,8 +514,8 @@
             try {
                 top3Container.innerHTML = '<div class="loading">加载中...</div>';
 
-                // 调用后端API获取TOP3
-                const response = await fetch('/api/top3?limit=3');
+                // 调用后端API获取TOP8
+                const response = await fetch('/api/top3?limit=8');
                 if (response.ok) {
                     const data = await response.json();
                     
@@ -549,7 +547,6 @@
                                         <div class="top3-metric-value ${winRateClass}">${stock.win_rate || 0}%</div>
                                     </div>
                                     <div class="top3-metric">
-                                        <div class="top3-metric-label">查询次数</div>
                                         <div class="top3-metric-value">${stock.query_count || 0}</div>
                                     </div>
                                     <div class="top3-metric">
