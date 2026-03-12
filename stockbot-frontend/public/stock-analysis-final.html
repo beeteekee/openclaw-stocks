@@ -141,51 +141,40 @@
             font-size: 12px;
         }
 
-        /* 统计信息横向滚动条 */
-        .stats-ticker {
+        /* 统计信息卡片 - 桌面端横向排列 */
+        .stats-container {
             background: #2c3e50;
             color: white;
-            padding: 8px 0;
+            padding: 12px;
             margin-top: 20px;
             border-radius: 8px;
-            overflow: hidden;
-            position: relative;
         }
 
-        .ticker-content {
+        .stats-items {
             display: flex;
-            animation: scroll-left 20s linear infinite;
-            white-space: nowrap;
+            gap: 12px;
+            justify-content: space-around;
         }
 
-        .ticker-item {
-            flex: 0 0 auto;
-            padding: 0 30px;
-            font-size: 14px;
-            font-weight: 500;
+        .stats-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 10px 15px;
+            text-align: center;
+            flex: 1;
+            min-width: 0;
         }
 
-        .ticker-label {
+        .stats-label {
             color: #3498db;
-            margin-right: 5px;
+            font-size: 12px;
+            margin-bottom: 4px;
         }
 
-        .ticker-value {
+        .stats-value {
             color: #2ecc71;
             font-weight: bold;
-        }
-
-        @keyframes scroll-left {
-            0% {
-                transform: translateX(100%);
-            }
-            100% {
-                transform: translateX(-100%);
-            }
-        }
-
-        .stats-ticker:hover .ticker-content {
-            animation-play-state: paused;
+            font-size: 16px;
         }
 
         .examples {
@@ -268,6 +257,29 @@
                 font-size: 10px;
                 padding: 8px;
             }
+
+            /* 统计信息 - 移动端纵向堆叠 */
+            .stats-items {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .stats-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 16px;
+                min-height: 48px;
+            }
+
+            .stats-label {
+                font-size: 13px;
+                margin-bottom: 0;
+            }
+
+            .stats-value {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
@@ -297,20 +309,20 @@
             <p style="color: #999; text-align: center;">请在上方输入股票进行分析</p>
         </div>
 
-        <!-- 统计信息横向滚动条 -->
-        <div class="stats-ticker">
-            <div class="ticker-content" id="tickerContent">
-                <div class="ticker-item">
-                    <span class="ticker-label">日期:</span>
-                    <span class="ticker-value" id="statsDate">加载中...</span>
+        <!-- 统计信息卡片 -->
+        <div class="stats-container">
+            <div class="stats-items">
+                <div class="stats-item">
+                    <div class="stats-label">日期</div>
+                    <div class="stats-value" id="statsDate">加载中...</div>
                 </div>
-                <div class="ticker-item">
-                    <span class="ticker-label">查询次数:</span>
-                    <span class="ticker-value" id="statsQueryCount">0</span>
+                <div class="stats-item">
+                    <div class="stats-label">查询次数</div>
+                    <div class="stats-value" id="statsQueryCount">0</div>
                 </div>
-                <div class="ticker-item">
-                    <span class="ticker-label">股票数量:</span>
-                    <span class="ticker-value" id="statsStockCount">0</span>
+                <div class="stats-item">
+                    <div class="stats-label">股票数量</div>
+                    <div class="stats-value" id="statsStockCount">0</div>
                 </div>
             </div>
         </div>
