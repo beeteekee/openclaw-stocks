@@ -238,6 +238,19 @@ def get_industry_growth_coefficients():
     """获取行业成长系数表"""
     return jsonify(INDUSTRY_GROWTH)
 
+# 静态文件服务（前端页面）
+FRONTEND_DIR = '/Users/likan/.openclaw/workspace/stockbot-frontend/public'
+
+@app.route('/')
+def index():
+    """首页：重定向到股票分析页面"""
+    return send_file(os.path.join(FRONTEND_DIR, 'stock-analysis-final.html'))
+
+@app.route('/stock-analysis-final.html')
+def stock_analysis():
+    """股票分析页面"""
+    return send_file(os.path.join(FRONTEND_DIR, 'stock-analysis-final.html'))
+
 if __name__ == '__main__':
     print(f"🚀 启动养家心法选股服务...")
     print(f"📊 服务地址：http://localhost:{FLASK_PORT}")
