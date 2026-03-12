@@ -310,6 +310,76 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* 排行榜样式 */
+        .ranking-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ranking-item {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .ranking-item:hover {
+            transform: translateX(5px);
+        }
+
+        .ranking-rank {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            min-width: 60px;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        .ranking-rank.top1 {
+            background: #f1c40f;
+        }
+
+        .ranking-rank.top2 {
+            background: #95a5a6;
+        }
+
+        .ranking-rank.top3 {
+            background: #d35400;
+        }
+
+        .ranking-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .ranking-stock-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .ranking-stock-code {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .ranking-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
         /* 移动端优化 */
         @media (max-width: 480px) {
             body {
@@ -448,6 +518,14 @@
             </div>
         </div>
 
+        <!-- 查询次数排行榜TOP10 -->
+        <div class="top3-section">
+            <h3 class="section-title">📊 查询次数排行榜TOP10</h3>
+            <div class="ranking-container" id="rankingContainer">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+
         <!-- 统计信息卡片 -->
         <div class="stats-container">
             <div class="stats-items">
@@ -508,8 +586,8 @@
             }
         }
 
-        // 加载TOP3精选股票
-        async function loadTop3() {
+        // 加载TOP8精选股票
+        async function loadTop8() {
             const top3Container = document.getElementById('top3Container');
             try {
                 top3Container.innerHTML = '<div class="loading">加载中...</div>';
@@ -568,6 +646,69 @@
             } catch (error) {
                 console.error('加载TOP3失败:', error);
                 top3Container.innerHTML = '<div class="loading">加载失败，请稍后重试</div>';
+            }
+        }
+
+        // 加载查询次数排行榜
+        async function loadRanking() {
+            const rankingContainer = document.getElementById('rankingContainer');
+            try {
+                rankingContainer.innerHTML = '<div class="loading">加载中...</div>';
+
+                const response = await fetch('/api/stats');
+                if (response.ok) {
+                    const data = await response.json();
+                    const stockQueries = data.stock_queries || {};
+
+                    // 转换为数组并按查询次数排序
+                    const rankingArray = Object.entries(stockQueries)
+                        .map(([code, info]) => ({
+                            code: code,
+                            name: info.name || code,
+                            count: info.count || 0
+                        }))
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 10); // 取前10名
+
+                    if (rankingArray.length > 0) {
+                        rankingContainer.innerHTML = '';
+
+                        rankingArray.forEach((item, index) => {
+                            const rank = index + 1;
+                            let rankClass = '';
+
+                            if (rank === 1) rankClass = 'top1';
+                            else if (rank === 2) rankClass = 'top2';
+                            else if (rank === 3) rankClass = 'top3';
+
+                            const rankingItem = document.createElement('div');
+                            rankingItem.className = 'ranking-item';
+                            rankingItem.onclick = () => {
+                                stockInput.value = item.code;
+                                analyze();
+                            };
+
+                            rankingItem.innerHTML = `
+                                <div class="ranking-rank ${rankClass}">#${rank}</div>
+                                <div class="ranking-info">
+                                    <div class="ranking-stock-name">${item.name}</div>
+                                    <div class="ranking-stock-code">${item.code}</div>
+                                </div>
+                                <div class="ranking-count">${item.count}</div>
+                            `;
+
+                            rankingContainer.appendChild(rankingItem);
+                        });
+                    } else {
+                        rankingContainer.innerHTML = '<div class="loading">暂无排行榜数据</div>';
+                    }
+                } else {
+                    console.error('获取排行榜数据失败');
+                    rankingContainer.innerHTML = '<div class="loading">加载失败，请稍后重试</div>';
+                }
+            } catch (error) {
+                console.error('加载排行榜失败:', error);
+                rankingContainer.innerHTML = '<div class="loading">加载失败，请稍后重试</div>';
             }
         }
 
@@ -740,8 +881,10 @@
             console.log('页面已加载');
             // 加载统计数据
             loadStats();
-            // 加载TOP3精选股票
-            loadTop3();
+            // 加载TOP8精选股票
+            loadTop8();
+            // 加载查询次数排行榜
+            loadRanking();
             // 简单的连接测试
             fetch(API_URL, {
                 method: 'POST',
