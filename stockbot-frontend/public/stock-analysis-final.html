@@ -13,7 +13,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f5f5;
+            background: #eff6ff;
             padding: 15px;
             display: flex;
             justify-content: center;
@@ -49,12 +49,12 @@
         }
 
         input[type="text"]:focus {
-            border-color: #2c3e50;
+            border-color: #2563eb;
         }
 
         button {
             padding: 12px 24px;
-            background: #2c3e50;
+            background: #2563eb;
             color: white;
             border: none;
             border-radius: 8px;
@@ -65,11 +65,11 @@
         }
 
         button:hover {
-            background: #34495e;
+            background: #1d4ed8;
         }
 
         button:disabled {
-            background: #7f8c8d;
+            background: #e2e8f0;
             cursor: not-allowed;
         }
 
@@ -79,7 +79,7 @@
             gap: 8px;
             margin-bottom: 20px;
             padding: 10px;
-            background: #ecf0f1;
+            background: #eff6ff;
             border-radius: 6px;
             font-size: 14px;
         }
@@ -91,23 +91,23 @@
         }
 
         .status-dot.connected {
-            background: #34495e; }
+            background: #1d4ed8; }
 
         .status-dot.disconnected {
-            background: #e74c3c;
+            background: #ef4444;
         }
 
         .status-dot.busy {
-            background: #f39c12;
+            background: #f59e0b;
         }
 
         .status-dot.error {
-            background: #e74c3c;
+            background: #ef4444;
         }
 
         .result-section {
             min-height: 200px;
-            background: #ecf0f1;
+            background: #eff6ff;
             border-radius: 8px;
             padding: 15px;
             white-space: pre-wrap;
@@ -116,13 +116,13 @@
             word-break: break-word;
             font-size: 14px;
             line-height: 1.6;
-            color: #2c3e50;
+            color: #2563eb;
             overflow-x: auto;
             max-width: 100%;
         }
 
         .error-message {
-            color: #e74c3c;
+            color: #ef4444;
             background: #fadbd8;
             padding: 10px;
             border-radius: 6px;
@@ -132,7 +132,7 @@
 
         .debug-section {
             background: #fef5e7;
-            border-left: 3px solid #f39c12;
+            border-left: 3px solid #f59e0b;
             padding: 10px;
             margin-top: 20px;
             border-radius: 4px;
@@ -147,10 +147,10 @@
         .section-title {
             font-size: 18px;
             font-weight: 600;
-            color: #2c3e50;
+            color: #2563eb;
             margin-bottom: 15px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #2c3e50;
+            border-bottom: 2px solid #2563eb;
         }
 
         .top3-container {
@@ -160,11 +160,11 @@
         }
 
         .top3-item {
-            background: linear-gradient(135deg, #7f8c8d 0%, #7f8c8d 100%);
+            background: linear-gradient(135deg, #e2e8f0 0%, #e2e8f0 100%);
             color: white;
             padding: 16px;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
@@ -194,11 +194,12 @@
         }
 
         .top3-stock-code {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 2px 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
             border-radius: 4px;
-            font-size: 12px;
-            font-family: monospace;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .top3-metrics {
@@ -230,20 +231,20 @@
         }
 
         .top3-metric-value.high {
-            color: #2c3e50;
+            color: #2563eb;
         }
 
         .top3-metric-value.medium {
-            color: #f39c12;
+            color: #f59e0b;
         }
 
         .top3-metric-value.low {
-            color: #e74c3c;
+            color: #ef4444;
         }
 
         /* 统计信息卡片 - 桌面端横向排列 */
         .stats-container {
-            background: #2c3e50;
+            background: #2563eb;
             color: white;
             padding: 12px;
             margin-top: 20px;
@@ -266,13 +267,13 @@
         }
 
         .stats-label {
-            color: #7f8c8d;
+            color: #e2e8f0;
             font-size: 12px;
             margin-bottom: 4px;
         }
 
         .stats-value {
-            color: #2c3e50;
+            color: #2563eb;
             font-weight: bold;
             font-size: 16px;
         }
@@ -294,7 +295,7 @@
         }
 
         .example:hover {
-            background: #2c3e50;
+            background: #2563eb;
             color: white;
         }
 
@@ -303,7 +304,7 @@
             width: 16px;
             height: 16px;
             border: 2px solid #ddd;
-            border-top-color: #2c3e50;
+            border-top-color: #2563eb;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-right: 8px;
@@ -322,7 +323,7 @@
         }
 
         .ranking-item {
-            background: linear-gradient(135deg, #7f8c8d 0%, #7f8c8d 100%);
+            background: linear-gradient(135deg, #e2e8f0 0%, #e2e8f0 100%);
             color: white;
             padding: 12px 16px;
             border-radius: 8px;
@@ -352,7 +353,7 @@
         }
 
         .ranking-rank.top2 {
-            background: #7f8c8d;
+            background: #e2e8f0;
         }
 
         .ranking-rank.top3 {
@@ -620,8 +621,8 @@
                             top3Item.innerHTML = `
                                 <div class="top3-header">
                                     <span class="top3-rank">TOP ${index + 1}</span>
-                                    <span class="top3-stock-name">${stock.name || stock.code}</span>
-                                    <span class="top3-stock-code">${stock.code}</span>
+                                    <span class="top3-stock-name">${stock.name || stock.ts_code}</span>
+                                    <span class="top3-stock-code">${stock.ts_code || stock.code}</span>
                                 </div>
                                 <div class="top3-metrics">
                                     <div class="top3-metric">
