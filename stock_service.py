@@ -22,7 +22,7 @@ CORS(app)
 # 从环境变量读取配置
 TUSHARE_TOKEN = os.getenv('TUSHARE_TOKEN')
 STATS_FILE = os.getenv('STATS_FILE', '/Users/likan/.openclaw/workspace/query_stats.json')
-TOP3_TODAY_FILE = os.getenv('TOP3_TODAY_FILE', '/Users/likan/.openclaw/workspace/top3_today_result.csv')
+TOP3_TODAY_FILE = os.getenv('TOP3_RESULT_FILE', '/Users/likan/.openclaw/workspace/top3_today_result.csv')
 FEISHU_APP_ID = os.getenv('FEISHU_APP_ID', '')
 FEISHU_APP_SECRET = os.getenv('FEISHU_APP_SECRET', '')
 FEISHU_REGION = os.getenv('FEISHU_REGION', 'cn')

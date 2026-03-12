@@ -150,6 +150,82 @@ app.get('/api/stats/previous', (req, res) => {
     }
 });
 
+// API代理 - 转发到Python后端（端口5000）
+const API_BACKEND = 'http://localhost:5000';
+const http = require('http');
+
+// 股票分析API
+app.get('/api/analyze', (req, res) => {
+    const url = new URL(req.url, API_BACKEND);
+    console.log('[Proxy] 转发请求到后端:', url.href);
+    
+    const proxyReq = http.request(url, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, proxyRes.headers);
+        proxyRes.pipe(res);
+    });
+    
+    proxyReq.on('error', (err) => {
+        console.error('[Proxy] 代理请求失败:', err);
+        res.status(500).json({ success: false, error: '后端服务不可用' });
+    });
+    
+    req.pipe(proxyReq);
+});
+
+// TOP3精选API
+app.get('/api/top3', (req, res) => {
+    const url = new URL(req.url, API_BACKEND);
+    console.log('[Proxy] 转发TOP3请求到后端:', url.href);
+    
+    const proxyReq = http.request(url, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, proxyRes.headers);
+        proxyRes.pipe(res);
+    });
+    
+    proxyReq.on('error', (err) => {
+        console.error('[Proxy] TOP3代理请求失败:', err);
+        res.status(500).json({ success: false, error: '后端服务不可用' });
+    });
+    
+    req.pipe(proxyReq);
+});
+
+// 舆情分析API
+app.get('/api/sentiment', (req, res) => {
+    const url = new URL(req.url, API_BACKEND);
+    console.log('[Proxy] 转发舆情分析请求到后端:', url.href);
+    
+    const proxyReq = http.request(url, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, proxyRes.headers);
+        proxyRes.pipe(res);
+    });
+    
+    proxyReq.on('error', (err) => {
+        console.error('[Proxy] 舆情分析代理请求失败:', err);
+        res.status(500).json({ success: false, error: '后端服务不可用' });
+    });
+    
+    req.pipe(proxyReq);
+});
+
+// 行业成长系数API
+app.get('/api/industry-growth', (req, res) => {
+    const url = new URL(req.url, API_BACKEND);
+    console.log('[Proxy] 转发行业成长请求到后端:', url.href);
+    
+    const proxyReq = http.request(url, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, proxyRes.headers);
+        proxyRes.pipe(res);
+    });
+    
+    proxyReq.on('error', (err) => {
+        console.error('[Proxy] 行业成长代理请求失败:', err);
+        res.status(500).json({ success: false, error: '后端服务不可用' });
+    });
+    
+    req.pipe(proxyReq);
+});
+
 // HTTP 服务器启动
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('');

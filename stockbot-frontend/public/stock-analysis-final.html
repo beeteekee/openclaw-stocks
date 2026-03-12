@@ -140,6 +140,103 @@
             font-size: 12px;
         }
 
+        /* TOP3精选股票样式 */
+        .top3-section {
+            margin-top: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .top3-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .top3-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .top3-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .top3-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .top3-rank {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .top3-stock-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .top3-stock-code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .top3-metrics {
+            display: flex;
+            gap: 16px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .top3-metric {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .top3-metric-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .top3-metric-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .top3-metric-value.high {
+            color: #4ade80;
+        }
+
+        .top3-metric-value.medium {
+            color: #fbbf24;
+        }
+
+        .top3-metric-value.low {
+            color: #f87171;
+        }
+
         /* 统计信息卡片 - 桌面端横向排列 */
         .stats-container {
             background: #2c3e50;
@@ -222,6 +319,29 @@
             .container {
                 padding: 15px 10px;
                 border-radius: 8px;
+            }
+
+            .section-title {
+                font-size: 16px;
+            }
+
+            /* TOP3移动端优化 */
+            .top3-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .top3-stock-name {
+                font-size: 16px;
+            }
+
+            .top3-metrics {
+                gap: 12px;
+            }
+
+            .top3-metric-value {
+                font-size: 14px;
             }
 
             .input-group {
@@ -320,6 +440,14 @@
             <p style="color: #999; text-align: center;">请在上方输入股票进行分析</p>
         </div>
 
+        <!-- 股票精选TOP3 -->
+        <div class="top3-section">
+            <h3 class="section-title">📈 今日精选TOP3</h3>
+            <div class="top3-container" id="top3Container">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+
         <!-- 统计信息卡片 -->
         <div class="stats-container">
             <div class="stats-items">
@@ -379,6 +507,70 @@
                 }
             } catch (error) {
                 console.error('加载统计数据失败:', error);
+            }
+        }
+
+        // 加载TOP3精选股票
+        async function loadTop3() {
+            const top3Container = document.getElementById('top3Container');
+            try {
+                top3Container.innerHTML = '<div class="loading">加载中...</div>';
+
+                // 调用后端API获取TOP3
+                const response = await fetch('/api/top3?limit=3');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.stocks && data.stocks.length > 0) {
+                        top3Container.innerHTML = '';
+                        
+                        data.stocks.forEach((stock, index) => {
+                            const top3Item = document.createElement('div');
+                            top3Item.className = 'top3-item';
+                            
+                            // 判断赢面率等级
+                            const winRate = parseFloat(stock.win_rate || 0);
+                            let winRateClass = 'low';
+                            if (winRate >= 80) {
+                                winRateClass = 'high';
+                            } else if (winRate >= 60) {
+                                winRateClass = 'medium';
+                            }
+
+                            top3Item.innerHTML = `
+                                <div class="top3-header">
+                                    <span class="top3-rank">TOP ${index + 1}</span>
+                                    <span class="top3-stock-name">${stock.name || stock.code}</span>
+                                    <span class="top3-stock-code">${stock.code}</span>
+                                </div>
+                                <div class="top3-metrics">
+                                    <div class="top3-metric">
+                                        <div class="top3-metric-label">赢面率</div>
+                                        <div class="top3-metric-value ${winRateClass}">${stock.win_rate || 0}%</div>
+                                    </div>
+                                    <div class="top3-metric">
+                                        <div class="top3-metric-label">查询次数</div>
+                                        <div class="top3-metric-value">${stock.query_count || 0}</div>
+                                    </div>
+                                    <div class="top3-metric">
+                                        <div class="top3-metric-label">今日状态</div>
+                                        <div class="top3-metric-value ${winRateClass}">${winRate >= 80 ? '推荐' : '关注'}</div>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            top3Container.appendChild(top3Item);
+                        });
+                    } else {
+                        top3Container.innerHTML = '<div class="loading">暂无精选数据</div>';
+                    }
+                } else {
+                    console.error('获取TOP3失败');
+                    top3Container.innerHTML = '<div class="loading">加载失败，请稍后重试</div>';
+                }
+            } catch (error) {
+                console.error('加载TOP3失败:', error);
+                top3Container.innerHTML = '<div class="loading">加载失败，请稍后重试</div>';
             }
         }
 
@@ -551,6 +743,8 @@
             console.log('页面已加载');
             // 加载统计数据
             loadStats();
+            // 加载TOP3精选股票
+            loadTop3();
             // 简单的连接测试
             fetch(API_URL, {
                 method: 'POST',
