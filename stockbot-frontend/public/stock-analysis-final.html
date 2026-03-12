@@ -212,6 +212,11 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 10px 16px;
+            border-radius: 6px;
+            min-width: 120px;
+            text-align: center;
         }
 
         .top3-metric-label {
@@ -621,10 +626,7 @@
                                 <div class="top3-metrics">
                                     <div class="top3-metric">
                                         <div class="top3-metric-label">赢面率</div>
-                                        <div class="top3-metric-value ${winRateClass}">${stock.win_rate || 0}%</div>
-                                    </div>
-                                    <div class="top3-metric">
-                                        <div class="top3-metric-value">${stock.query_count || 0}</div>
+                                        <div class="top3-metric-value ${winRateClass}">${(winRate * 100).toFixed(2)}%</div>
                                     </div>
                                     <div class="top3-metric">
                                         <div class="top3-metric-label">今日状态</div>
