@@ -640,25 +640,25 @@ def analyze_stock(ts_code, pro, latest_date=None):
         position_advice = calculate_position_advice(win_rate, total_mv)
 
         return {
-            'ts_code': ts_code,
-            'name': stock_info['name'],
-            'industry': stock_info['industry'],
-            'price': price,
-            'pct_chg': latest['pct_chg'],
-            'trade_date': latest['trade_date'],  # 添加交易日期
-            'total_mv': total_mv,
-            'overall_score': overall_score,
-            'win_rate': win_rate,
-            'position_advice': position_advice,
-            'buy_point_type': buy_point_type,
-            'buy_point_score': buy_point_score,
-            'ma250': ma250,
-            'price_above_ma250': price > ma250,
-            'long_term_score': long_term_score,
-            'mid_term_score': mid_term_score,
-            'short_term_score': short_term_score,
-            'growth_coeff': growth_coeff,
-            'limit_up_count': limit_up_count,
+            'ts_code': str(ts_code),
+            'name': str(stock_info['name']),
+            'industry': str(stock_info['industry']),
+            'price': float(price),
+            'pct_chg': float(latest['pct_chg']),
+            'trade_date': str(latest['trade_date']),  # 添加交易日期
+            'total_mv': float(total_mv),
+            'overall_score': float(overall_score),
+            'win_rate': float(win_rate),
+            'position_advice': str(position_advice),
+            'buy_point_type': str(buy_point_type),
+            'buy_point_score': int(buy_point_score),
+            'ma250': float(ma250) if ma250 else None,
+            'price_above_ma250': bool(price > ma250),
+            'long_term_score': float(long_term_score),
+            'mid_term_score': float(mid_term_score),
+            'short_term_score': float(short_term_score),
+            'growth_coeff': float(growth_coeff),
+            'limit_up_count': int(limit_up_count),
         }
 
     except Exception as e:

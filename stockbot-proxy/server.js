@@ -4,7 +4,8 @@ const cors = require('cors');
 
 const app = express();
 const PROXY_PORT = 80;
-const TARGET_PORT = 18789;
+const GATEWAY_PORT = 18789;
+const FLASK_PORT = 5000;
 const TARGET_HOST = 'localhost';
 
 // 静态文件服务
@@ -71,14 +72,46 @@ app.get('/health', (req, res) => {
 // 请求超时（120秒 - 支持完整的股票分析）
 const REQUEST_TIMEOUT = 120000;
 
-// 代理所有非静态文件请求
-app.all('/v1/*', (req, res) => {
-    console.log('[代理] 收到请求:', req.method, req.url);
+// 代理 Flask API 请求（股票分析）
+app.all('/api/*', (req, res) => {
+    const options = {
+        hostname: TARGET_HOST,
+        port: FLASK_PORT,
+        path: req.url,
+        method: req.method,
+        headers: {
+            'host': TARGET_HOST + ':' + FLASK_PORT,
+            'x-forwarded-host': req.headers['host'],
+            'x-forwarded-proto': req.protocol || 'http',
+            ...req.headers
+        }
+    };
 
-    // 设置超时
+    console.log('[代理 Flask API] ' + req.method + ' ' + req.url + ' -> ' + TARGET_HOST + ':' + FLASK_PORT + req.url);
+
     res.setTimeout(REQUEST_TIMEOUT);
 
-    // 代理请求
+    const proxyReq = http.request(options, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, proxyRes.headers);
+        proxyRes.pipe(res);
+    });
+
+    proxyReq.on('error', (err) => {
+        console.error('[Flask 代理错误]', err);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Flask服务错误', message: err.message });
+        }
+    });
+
+    req.pipe(proxyReq);
+});
+
+// 代理 Gateway 请求（OpenClaw API）
+app.all('/v1/*', (req, res) => {
+    console.log('[代理 Gateway] 收到请求:', req.method, req.url);
+
+    res.setTimeout(REQUEST_TIMEOUT);
+
     proxyRequest(req, res);
 });
 
@@ -96,23 +129,22 @@ const server = app.listen(PROXY_PORT, '0.0.0.0', () => {
     console.log('');
     console.log('📋 服务信息');
     console.log('   代理端口:   ' + PROXY_PORT + ' (外网 80 端口转发）');
-    console.log('   目标服务:   ' + TARGET_HOST + ':' + TARGET_PORT + ' (OpenClaw Gateway）');
+    console.log('   Flask服务:   ' + TARGET_HOST + ':' + FLASK_PORT + ' (股票分析API）');
+    console.log('   Gateway服务: ' + TARGET_HOST + ':' + GATEWAY_PORT + ' (OpenClaw Gateway）');
     console.log('');
     console.log('🌐 访问地址');
-    console.log('   外网网页:   http://stockbot.nat100.top:' + PROXY_PORT + '/stock-analysis-final.html');
-    console.log('   本地网页:   http://localhost:' + PROXY_PORT + '/stock-analysis-final.html');
-    console.log('   外网 API:  http://stockbot.nat100.top:' + PROXY_PORT + '/v1/chat/completions');
-    console.log('   本地 API:  http://localhost:' + TARGET_PORT + '/v1/chat/completions');
+    console.log('   外网网页:   http://stockbot.nat100.top/stock-analysis.html');
+    console.log('   本地网页:   http://localhost:' + PROXY_PORT + '/stock-analysis.html');
     console.log('');
-    console.log('🔧 配置说明');
-    console.log('   1. 页面 API 已配置为: http://localhost:' + TARGET_PORT + '/v1/chat/completions');
-    console.log('   2. 如需使用外网 API，请修改页面中的 API_URL');
-    console.log('   3. 如需使用外网网页，请在浏览器中访问外网地址');
+    console.log('🔧 代理配置');
+    console.log('   /api/*   -> Flask:5000 (股票分析）');
+    console.log('   /v1/*    -> Gateway:' + GATEWAY_PORT + ' (OpenClaw API）');
+    console.log('   /*       -> 静态文件 (public/）');
     console.log('');
     console.log('💡 使用提示');
     console.log('   - 停止代理服务器: Ctrl + C');
-    console.log('   - 查看 Gateway 服务是否正常: openclaw status');
     console.log('   - 重启代理服务器: npm start');
+    console.log('   - HTML文件需放在 stockbot-proxy/public/ 目录');
     console.log('');
 });
 

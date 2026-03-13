@@ -166,34 +166,42 @@ def get_stats():
 
 @app.route('/api/analyze', methods=['GET'])
 def analyze_stock():
-    """分析单只股票"""
+    """分析单只股票 - 调用完整分析逻辑"""
     stock_code = request.args.get('code', '')
-    
+
     if not stock_code:
         return jsonify({'error': 'Missing stock code parameter'}), 400
-    
+
     # 记录查询统计
     QUERY_STATS['total_count'] += 1
     QUERY_STATS['stock_queries'][stock_code] = QUERY_STATS['stock_queries'].get(stock_code, 0) + 1
     save_query_stats()
-    
-    # 获取股票基本信息
-    stock_info = get_stock_basic_info(stock_code)
-    
-    if not stock_info:
-        return jsonify({'error': 'Stock not found'}), 404
-    
-    # 计算舆情热度得分
-    sentiment = calculate_sentiment_score(stock_code, '')
-    
-    return jsonify({
-        'code': stock_code,
-        'price': stock_info['close'],
-        'pct_chg': stock_info['pct_chg'],
-        'sentiment_heat_score': sentiment['heat_score'],
-        'query_count': sentiment['query_count'],
-        'data_source': sentiment['data_source']
-    })
+
+    try:
+        # 导入完整分析模块
+        import sys
+        sys.path.append('/Users/likan/.openclaw/workspace')
+        from top3_today import analyze_stock as full_analyze
+
+        # 调用完整分析函数
+        result = full_analyze(stock_code, pro)
+
+        if not result:
+            return jsonify({'error': 'Stock not found or analysis failed'}), 404
+
+        # 添加查询统计信息
+        result['query_count'] = QUERY_STATS['stock_queries'].get(stock_code, 0)
+
+        # 将不可序列化的类型转换为JSON兼容类型
+        result['price_above_ma250'] = bool(result.get('price_above_ma250', False))
+        if 'ma250' in result and result['ma250'] is not None:
+            result['ma250'] = float(result['ma250'])
+
+        return jsonify(result)
+
+    except Exception as e:
+        print(f"分析失败: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/top3', methods=['GET'])
 def get_top_stocks():
