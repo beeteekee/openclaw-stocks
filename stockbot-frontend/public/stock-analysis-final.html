@@ -180,40 +180,41 @@
         .top3-item {
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             color: #2c3e50;
-            padding: 18px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 14px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            gap: 12px;
         }
 
         .top3-item:hover {
-            transform: translateY(-3px) scale(1.01);
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.12);
             border-color: rgba(102, 126, 234, 0.3);
-        }
-
-        .top3-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
         }
 
         .top3-rank {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 6px 16px;
-            border-radius: 20px;
+            padding: 4px 12px;
+            border-radius: 16px;
             font-weight: 700;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            font-size: 13px;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.25);
+            min-width: 36px;
+            text-align: center;
         }
 
         .top3-stock-name {
-            font-size: 18px;
-            font-weight: 700;
+            font-size: 16px;
+            font-weight: 600;
             color: #2c3e50;
+            flex: 1;
         }
 
         .top3-stock-code {
@@ -221,73 +222,9 @@
             padding: 4px 12px;
             border-radius: 6px;
             font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 13px;
+            font-size: 12px;
             color: #5a6c7d;
             border: 1px solid rgba(102, 126, 234, 0.1);
-        }
-            font-size: 13px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .top3-metrics {
-            display: flex;
-            gap: 20px;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-
-        .top3-metric {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            padding: 12px 18px;
-            border-radius: 10px;
-            min-width: 130px;
-            text-align: center;
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            transition: all 0.3s;
-        }
-
-        .top3-metric:hover {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-        }
-
-        .top3-metric-label {
-            font-size: 12px;
-            font-weight: 500;
-            color: #7f8c8d;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .top3-metric-value {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .top3-metric-value.high {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .top3-metric-value.medium {
-            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .top3-metric-value.low {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
         /* 统计信息卡片 - 桌面端横向排列 */
@@ -466,22 +403,24 @@
             }
 
             /* TOP3移动端优化 */
-            .top3-header {
-                flex-direction: column;
-                align-items: flex-start;
+            .top3-item {
+                padding: 10px 12px;
                 gap: 8px;
             }
 
+            .top3-rank {
+                padding: 3px 8px;
+                font-size: 11px;
+                min-width: 28px;
+            }
+
             .top3-stock-name {
-                font-size: 16px;
-            }
-
-            .top3-metrics {
-                gap: 12px;
-            }
-
-            .top3-metric-value {
                 font-size: 14px;
+            }
+
+            .top3-stock-code {
+                padding: 3px 8px;
+                font-size: 11px;
             }
 
             .input-group {
@@ -690,34 +629,17 @@
                         data.stocks.forEach((stock, index) => {
                             const top3Item = document.createElement('div');
                             top3Item.className = 'top3-item';
-                            
-                            // 判断赢面率等级
-                            const winRate = parseFloat(stock.win_rate || 0);
-                            let winRateClass = 'low';
-                            if (winRate >= 80) {
-                                winRateClass = 'high';
-                            } else if (winRate >= 60) {
-                                winRateClass = 'medium';
-                            }
+                            top3Item.onclick = () => {
+                                stockInput.value = stock.ts_code;
+                                analyze();
+                            };
 
                             top3Item.innerHTML = `
-                                <div class="top3-header">
-                                    <span class="top3-rank">TOP ${index + 1}</span>
-                                    <span class="top3-stock-name">${stock.name || stock.ts_code}</span>
-                                    <span class="top3-stock-code">${stock.ts_code || stock.code}</span>
-                                </div>
-                                <div class="top3-metrics">
-                                    <div class="top3-metric">
-                                        <div class="top3-metric-label">赢面率</div>
-                                        <div class="top3-metric-value ${winRateClass}">${(winRate * 100).toFixed(2)}%</div>
-                                    </div>
-                                    <div class="top3-metric">
-                                        <div class="top3-metric-label">今日状态</div>
-                                        <div class="top3-metric-value ${winRateClass}">${winRate >= 80 ? '推荐' : '关注'}</div>
-                                    </div>
-                                </div>
+                                <span class="top3-rank">${index + 1}</span>
+                                <span class="top3-stock-name">${stock.name || stock.ts_code}</span>
+                                <span class="top3-stock-code">${stock.ts_code || stock.code}</span>
                             `;
-                            
+
                             top3Container.appendChild(top3Item);
                         });
                     } else {
