@@ -576,11 +576,6 @@
         const statsStockCount = document.getElementById('statsStockCount');
         const statsTotalCount = document.getElementById('statsTotalCount');
 
-        // API 配置
-        const API_URL = 'http://localhost:18789/v1/chat/completions';
-        const API_TOKEN = '2047e3763a3a15acfb3ef96e3c40eac23a59500c9c3f436b';
-        const AGENT_ID = 'stock-analysis';
-
         // 请求超时时间（30秒）
         const REQUEST_TIMEOUT = 30000;
 
@@ -715,21 +710,6 @@
             } catch (error) {
                 console.error('加载排行榜失败:', error);
                 rankingContainer.innerHTML = '<div class="loading">加载失败，请稍后重试</div>';
-            }
-        }
-
-        // 记录查询
-        async function recordQuery(stockCode) {
-            try {
-                await fetch('/api/stats/record', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ stockCode: stockCode })
-                });
-            } catch (error) {
-                console.error('记录统计失败:', error);
             }
         }
 
@@ -917,19 +897,9 @@
             loadTop8();
             // 加载查询次数排行榜
             loadRanking();
-            // 简单的连接测试
-            fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + API_TOKEN,
-                    'x-openclaw-agent-id': AGENT_ID
-                },
-                body: JSON.stringify({
-                    model: 'openclaw:' + AGENT_ID,
-                    messages: [{ role: 'user', content: '你好' }],
-                    stream: false
-                }),
+            // 连接测试：使用后端健康检查端点
+            fetch('/api/health', {
+                method: 'GET',
                 signal: AbortSignal.timeout(5000)
             }).then(response => {
                 if (response.ok) {
