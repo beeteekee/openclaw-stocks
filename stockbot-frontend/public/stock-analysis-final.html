@@ -337,13 +337,14 @@
         }
 
         .top3-item {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
-            color: #e0e0e0;
-            padding: 16px 20px;
-            border-radius: 14px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+            color: #ffffff;
+            padding: 18px 22px;
+            border-radius: 16px;
+            box-shadow: 0 6px 24px rgba(102, 126, 234, 0.25),
+                        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(102, 126, 234, 0.4);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -366,9 +367,11 @@
         }
 
         .top3-item:hover {
-            transform: translateY(-3px) scale(1.01);
-            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.25);
-            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4),
+                        0 0 0 2px rgba(102, 126, 234, 0.6) inset;
+            border-color: rgba(102, 126, 234, 0.8);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.18) 100%);
         }
 
         .top3-item:hover::before {
@@ -378,38 +381,43 @@
         .top3-rank {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-            min-width: 40px;
+            padding: 8px 16px;
+            border-radius: 24px;
+            font-weight: 800;
+            font-size: 16px;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5),
+                        0 0 0 2px rgba(255, 255, 255, 0.2) inset;
+            min-width: 50px;
             text-align: center;
             z-index: 1;
             position: relative;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .top3-stock-name {
-            font-size: 17px;
-            font-weight: 600;
-            color: #e0e0e0;
+            font-size: 19px;
+            font-weight: 700;
+            color: #ffffff;
             flex: 1;
             z-index: 1;
             position: relative;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.3px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .top3-stock-code {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 6px 14px;
-            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.15) 100%);
+            padding: 8px 16px;
+            border-radius: 12px;
             font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-            font-size: 13px;
-            color: rgba(224, 224, 224, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            color: #ffffff;
+            border: 2px solid rgba(102, 126, 234, 0.5);
             z-index: 1;
             position: relative;
-            font-weight: 500;
+            font-weight: 700;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
         }
 
         /* 统计信息卡片 - 桌面端横向排列 */
@@ -579,16 +587,16 @@
         }
 
         .ranking-item {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-            color: #e0e0e0;
-            padding: 16px 18px;
-            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.08) 100%);
+            color: #ffffff;
+            padding: 18px 20px;
+            border-radius: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 6px 24px rgba(102, 126, 234, 0.2);
             cursor: pointer;
             position: relative;
             overflow: hidden;
@@ -601,15 +609,17 @@
             left: 0;
             right: 0;
             height: 100%;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, transparent 100%);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, transparent 100%);
             opacity: 0;
             transition: opacity 0.3s;
         }
 
         .ranking-item:hover {
-            transform: translateX(8px);
-            box-shadow: 0 6px 24px rgba(102, 126, 234, 0.2);
-            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateX(10px) scale(1.01);
+            box-shadow: 0 10px 35px rgba(102, 126, 234, 0.35),
+                        0 0 0 3px rgba(102, 126, 234, 0.4) inset;
+            border-color: rgba(102, 126, 234, 0.7);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.12) 100%);
         }
 
         .ranking-item:hover::before {
@@ -619,68 +629,76 @@
         .ranking-rank {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 8px 16px;
-            border-radius: 24px;
-            font-weight: 700;
-            font-size: 14px;
-            min-width: 65px;
+            padding: 10px 18px;
+            border-radius: 28px;
+            font-weight: 800;
+            font-size: 16px;
+            min-width: 70px;
             text-align: center;
-            margin-right: 12px;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            margin-right: 14px;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5),
+                        0 0 0 2px rgba(255, 255, 255, 0.2) inset;
             z-index: 1;
             position: relative;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .ranking-rank.top1 {
             background: linear-gradient(135deg, #ffd700 0%, #ffb700 100%);
-            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.5);
+            box-shadow: 0 6px 24px rgba(255, 215, 0, 0.6),
+                        0 0 0 2px rgba(255, 255, 255, 0.3) inset;
         }
 
         .ranking-rank.top2 {
-            background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
-            box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+            background: linear-gradient(135deg, #e8e8e8 0%, #b8b8b8 100%);
+            box-shadow: 0 6px 20px rgba(192, 192, 192, 0.5),
+                        0 0 0 2px rgba(255, 255, 255, 0.3) inset;
         }
 
         .ranking-rank.top3 {
-            background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
-            box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+            background: linear-gradient(135deg, #e8943a 0%, #d4720f 100%);
+            box-shadow: 0 6px 20px rgba(205, 127, 50, 0.5),
+                        0 0 0 2px rgba(255, 255, 255, 0.3) inset;
         }
 
         .ranking-info {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 5px;
             z-index: 1;
             position: relative;
         }
 
         .ranking-stock-name {
-            font-weight: 600;
-            font-size: 16px;
-            color: #e0e0e0;
-            letter-spacing: 0.2px;
+            font-weight: 700;
+            font-size: 17px;
+            color: #ffffff;
+            letter-spacing: 0.3px;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         }
 
         .ranking-stock-code {
-            font-size: 12px;
-            opacity: 0.7;
+            font-size: 13px;
+            font-weight: 600;
             font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-            color: rgba(224, 224, 224, 0.7);
-            font-weight: 500;
+            color: rgba(255, 255, 255, 0.85);
+            letter-spacing: 0.5px;
         }
 
         .ranking-count {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 18px;
-            color: #e0e0e0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.5);
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 20px;
+            color: #ffffff;
             z-index: 1;
             position: relative;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3),
+                        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         /* 移动端优化 */
@@ -705,23 +723,28 @@
 
             /* TOP3移动端优化 */
             .top3-item {
-                padding: 12px 14px;
-                gap: 10px;
+                padding: 14px 16px;
+                gap: 12px;
+                border-width: 2px;
             }
 
             .top3-rank {
-                padding: 4px 10px;
-                font-size: 12px;
-                min-width: 32px;
+                padding: 6px 12px;
+                font-size: 14px;
+                min-width: 40px;
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
             }
 
             .top3-stock-name {
-                font-size: 15px;
+                font-size: 16px;
+                font-weight: 700;
             }
 
             .top3-stock-code {
-                padding: 4px 10px;
-                font-size: 11px;
+                padding: 5px 10px;
+                font-size: 12px;
+                border-width: 1px;
+                font-weight: 600;
             }
 
             .input-group {
@@ -803,23 +826,33 @@
             }
 
             .ranking-item {
-                padding: 12px 14px;
+                padding: 14px 16px;
+                border-width: 1px;
             }
 
             .ranking-rank {
-                min-width: 55px;
-                padding: 6px 12px;
-                font-size: 13px;
-                margin-right: 8px;
+                min-width: 58px;
+                padding: 8px 14px;
+                font-size: 14px;
+                margin-right: 10px;
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
             }
 
             .ranking-stock-name {
-                font-size: 15px;
+                font-size: 16px;
+                font-weight: 700;
+            }
+
+            .ranking-stock-code {
+                font-size: 12px;
+                font-weight: 600;
             }
 
             .ranking-count {
-                font-size: 16px;
-                padding: 6px 10px;
+                font-size: 18px;
+                padding: 7px 12px;
+                border-width: 1px;
+                font-weight: 800;
             }
         }
     </style>
